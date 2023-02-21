@@ -1,8 +1,8 @@
 from music21 import *
 
 # Load the XML file
-xml_file = 'Turkish March.xml'
-score = converter.parse(xml_file)
+file = 'resources/xml/SpongeBob_Production_Music_The_Rakehornpipe.xml'
+score = converter.parse(file)
 
 # Extract the notes and other musical elements
 notes_to_parse = None
@@ -16,7 +16,6 @@ except:
 
 # Get all the notes and chords in the score
 notes_to_parse = part_stream.flat.notesAndRests
-
 # Iterate over notes and print pitch and duration
 for element in notes_to_parse:
     if isinstance(element, note.Note):
@@ -24,5 +23,7 @@ for element in notes_to_parse:
     elif isinstance(element, chord.Chord):
         print(f"Pitch: {element.pitchedCommonName}, Duration: {element.duration.quarterLength}")
 
+midi_file = 'output.mid'
 midi_player = midi.realtime.StreamPlayer(score)
 midi_player.play()
+score.write('midi', fp=midi_file)
