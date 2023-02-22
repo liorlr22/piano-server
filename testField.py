@@ -1,12 +1,16 @@
 from music21 import *
+import os
 
 # Load the XML file
-file = 'resources/xml/SpongeBob_Production_Music_The_Rakehornpipe.xml'
+midi_files = os.listdir("resources/midi/")
+xml_files = os.listdir("resources/xml/")
+file = 'resources/midi/Killer Queen.mid'
 score = converter.parse(file)
 
 # Extract the notes and other musical elements
 notes_to_parse = None
 part_stream = None
+
 
 # Find the first part in the score
 try:
