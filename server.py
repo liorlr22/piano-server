@@ -3,81 +3,22 @@ import threading
 import os
 from music21 import *
 import tkinter as tk
-from tkinter import font as tkfont
+from tkinter import messagebox
 
 # List to hold connected clients
 clients = []
+notes_to_parse = None
+part_stream = None
 
 
-class SampleApp(tk.Tk):
-
-    def __init__(self, *args, **kwargs):
-        tk.Tk.__init__(self, *args, **kwargs)
-
-        self.title_font = tkfont.Font(family='Helvetica', size=18, weight="bold")
-
-        # the container is where we'll stack a bunch of frames
-        # on top of each other, then the one we want visible
-        # will be raised above the others
-        container = tk.Frame(self)
-        container.pack(side="top", fill="both", expand=True)
-        container.grid_rowconfigure(0, weight=1)
-        container.grid_columnconfigure(0, weight=1)
-
-        self.frames = {}
-        for F in (StartPage, PageOne):
-            page_name = F.__name__
-            frame = F(parent=container, controller=self)
-            self.frames[page_name] = frame
-
-            # put all of the pages in the same location;
-            # the one on the top of the stacking order
-            # will be the one that is visible.
-            frame.grid(row=0, column=0, sticky="nsew")
-
-        self.show_frame("StartPage")
-
-    def show_frame(self, page_name):
-        '''Show a frame for the given page name'''
-        frame = self.frames[page_name]
-        frame.tkraise()
-
-
-class StartPage(tk.Frame):
-
-    def __init__(self, parent, controller):
-        tk.Frame.__init__(self, parent)
-        self.controller = controller
-        label = tk.Label(self, text="This is the start page", font=controller.title_font)
-        label.pack(side="top", fill="x", pady=10)
-
-        button1 = tk.Button(self, text="Go to Page One",
-                            command=lambda: [controller.show_frame("PageOne"), run_server()])
-        button1.pack()
-
-
-class PageOne(tk.Frame):
-
-    def __init__(self, parent, controller):
-        tk.Frame.__init__(self, parent)
-        self.controller = controller
-        label = tk.Label(self, text="This is page 1", font=controller.title_font)
-        label.pack(side="top", fill="x", pady=10)
-        button = tk.Button(self, text="Go to the start page",
-                           command=lambda: controller.show_frame("StartPage"))
-        button.pack()
-
-
-def play():
+def play(f):
+    us = environment.UserSettings()
+    us.autoDownload = 'allow'
     # Load the XML file
-    midi_files = os.listdir("resources/midi/")
-    xml_files = os.listdir("resources/xml/")
-    file = 'resources/midi/Killer Queen.mid'
+    file = f'resources/midi/{f}'
     score = converter.parse(file)
 
     # Extract the notes and other musical elements
-    notes_to_parse = None
-    part_stream = None
 
     # Find the first part in the score
     try:
@@ -90,14 +31,9 @@ def play():
     # Iterate over notes and print pitch and duration
     for element in notes_to_parse:
         if isinstance(element, note.Note):
-            print(f"Pitch: {element.pitch.nameWithOctave}, Duration: {element.duration.quarterLength}")
+            run_server(f"Pitch: {element.pitch.nameWithOctave}, Duration: {element.duration.quarterLength}")
         elif isinstance(element, chord.Chord):
-            print(f"Pitch: {element.pitchedCommonName}, Duration: {element.duration.quarterLength}")
-
-    midi_file = 'output.mid'
-    midi_player = midi.realtime.StreamPlayer(score)
-    midi_player.play()
-    score.write('midi', fp=midi_file)
+            run_server(f"Pitch: {element.pitchedCommonName}, Duration: {element.duration.quarterLength}")
 
 
 def handle_client(clientsocket, clientaddr):
@@ -125,7 +61,6 @@ def handle_client(clientsocket, clientaddr):
         except socket.error as e:
             # Client socket error occurred, assume client has disconnected
             print("> Client disconnected with error")
-            play()
             break
 
     # Remove the client from the list of connected clients
@@ -135,16 +70,15 @@ def handle_client(clientsocket, clientaddr):
     clientsocket.close()
 
 
-def server_console():
+def server_console(n):
     # This function listens for input from the server console
     while True:
-        message = input("> enter message: ")
-        response = f"> Server said: {message}"
+        message = str(n)
         for c in clients:
-            c.send(response.encode('utf-8'))
+            c.send(message.encode('utf-8'))
 
 
-def startServer():
+def startServer(n):
     # Create a socket object
     serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -161,7 +95,7 @@ def startServer():
     serversocket.listen(5)
 
     # Start the server console thread
-    t = threading.Thread(target=server_console)
+    t = threading.Thread(target=server_console, args=n)
     t.start()
 
     while True:
@@ -178,13 +112,56 @@ def startServer():
         t.start()
 
 
-def run_server():
-    server_thread = threading.Thread(target=startServer())
+def run_server(n):
+    server_thread = threading.Thread(target=startServer(n))
     server_thread.start()
 
 
 if __name__ == '__main__':
-    window = SampleApp()
+    # Check if MIDI directory exists and is not empty
+    midi_dir = "resources/midi/"
+    if not os.path.exists(midi_dir):
+        messagebox.showerror("Error", f"MIDI directory '{midi_dir}' not found.")
+        exit()
+    midi_files = os.listdir(midi_dir)
+    if not midi_files:
+        messagebox.showerror("Error", f"No MIDI files found in directory '{midi_dir}'.")
+        exit()
 
-    # Run the Tkinter event loop
+
+    def on_button_click(name):
+        def playMusic():
+            play(name)
+
+        threading.Thread(target=playMusic).start()
+
+
+    # Create a tkinter window
+    window = tk.Tk()
+    window.title("Piano Server")
+    window.resizable(width=False, height=False)
+
+    # Create a frame in the center
+    frame = tk.Frame(window)
+    frame.pack(fill=tk.BOTH, expand=True)
+
+    # Add title label to the frame
+    title = tk.Label(frame, text="Piano Server", font=("Arial", 24))
+    title.grid(row=0, column=0, pady=20, sticky="n", columnspan=len(midi_files))
+
+    # Calculate number of columns needed
+    num_files = len(midi_files)
+    max_rows = 10  # maximum number of rows per column
+    max_cols = 5  # maximum number of columns
+    num_cols = min(max(1, num_files // max_rows), max_cols)
+    num_rows = (num_files + num_cols - 1) // num_cols
+
+    # Add MIDI buttons to the frame
+    for i in range(num_files):
+        btn = tk.Button(frame, text=midi_files[i].rstrip(".mid"), padx=10,
+                        command=lambda name=midi_files[i]: on_button_click(name),
+                        width=15, wraplength=100, height=2)
+        btn.grid(row=(i // num_cols) + 1, column=i % num_cols, pady=5)
+
+    # Run the main loop
     window.mainloop()
