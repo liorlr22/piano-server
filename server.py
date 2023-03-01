@@ -1,6 +1,8 @@
 import socket
 import threading
 import os
+import time
+
 from music21 import *
 import tkinter as tk
 from tkinter import messagebox
@@ -10,8 +12,11 @@ clients = []
 notes_to_parse = None
 part_stream = None
 
+to_play = []
+
 
 def play(f):
+    global to_play
     us = environment.UserSettings()
     us.autoDownload = 'allow'
     # Load the XML file
@@ -31,9 +36,14 @@ def play(f):
     # Iterate over notes and print pitch and duration
     for element in notes_to_parse:
         if isinstance(element, note.Note):
-            run_server(f"Pitch: {element.pitch.nameWithOctave}, Duration: {element.duration.quarterLength}")
+            to_play.append((element.pitch.nameWithOctave, element.duration.quarterLength))
         elif isinstance(element, chord.Chord):
-            run_server(f"Pitch: {element.pitchedCommonName}, Duration: {element.duration.quarterLength}")
+            to_play.append((element.pitchedCommonName, element.duration.quarterLength))
+
+    # midi_file = 'output.mid'
+    # midi_player = midi.realtime.StreamPlayer(score)
+    # midi_player.play()
+    # score.write('midi', fp=midi_file)
 
 
 def handle_client(clientsocket, clientaddr):
@@ -70,15 +80,15 @@ def handle_client(clientsocket, clientaddr):
     clientsocket.close()
 
 
-def server_console(n):
+def server_console():
     # This function listens for input from the server console
     while True:
-        message = str(n)
+        message = str(input("> "))
         for c in clients:
             c.send(message.encode('utf-8'))
 
 
-def startServer(n):
+def startServer():
     # Create a socket object
     serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -95,14 +105,14 @@ def startServer(n):
     serversocket.listen(5)
 
     # Start the server console thread
-    t = threading.Thread(target=server_console, args=n)
+    t = threading.Thread(target=server_console)
     t.start()
 
     while True:
         # Wait for a connection
         clientsocket, clientaddr = serversocket.accept()
 
-        print("Got a connection from %s" % str(clientaddr))
+        print(f"Got a connection from {str(clientaddr)}")
 
         # Add the client to the list of connected clients
         clients.append(clientsocket)
@@ -112,12 +122,12 @@ def startServer(n):
         t.start()
 
 
-def run_server(n):
-    server_thread = threading.Thread(target=startServer(n))
+def run_server():
+    server_thread = threading.Thread(target=startServer())
     server_thread.start()
 
 
-if __name__ == '__main__':
+def open_window():
     # Check if MIDI directory exists and is not empty
     midi_dir = "resources/midi/"
     if not os.path.exists(midi_dir):
@@ -128,13 +138,17 @@ if __name__ == '__main__':
         messagebox.showerror("Error", f"No MIDI files found in directory '{midi_dir}'.")
         exit()
 
-
     def on_button_click(name):
         def playMusic():
+            global to_play
             play(name)
+            # Send the name of the MIDI file to the server
+            for p in to_play:
+                message = str(p)
+                for c in clients:
+                    c.send(message.encode('utf-8'))
 
         threading.Thread(target=playMusic).start()
-
 
     # Create a tkinter window
     window = tk.Tk()
@@ -165,3 +179,11 @@ if __name__ == '__main__':
 
     # Run the main loop
     window.mainloop()
+
+
+if __name__ == '__main__':
+    server = threading.Thread(target=run_server)
+    window = threading.Thread(target=open_window)
+
+    server.start()
+    window.start()
