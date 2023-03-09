@@ -1,5 +1,9 @@
+import pickle
 import socket
+import struct
 import threading
+import music21
+from music21.midi import realtime
 
 # Create a socket object
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -14,39 +18,50 @@ port = 9999
 client_socket.connect((host, port))
 print("Connected To Server")
 
+n_c = []
+serialized = []
+
 
 # Function to receive messages from the server
 def receive():
-    while True:
-        # Receive the response from the server
-        response = client_socket.recv(1024)
+    global n_c, serialized
+    message_header = client_socket.recv(8)
+    message_length = struct.unpack('>Q', message_header)[0]
 
-        # Print the response
-        print(response.decode('utf-8'))
-        play(response.decode())
+    serialized = b''
+    while len(serialized) < message_length:
+        remaining = message_length - len(serialized)
+        data = client_socket.recv(min(remaining, 1024))
+        if not data:
+            break
+        serialized += data
+
+    n_c = pickle.loads(serialized)
+    for n in n_c:
+        play(str(n))
 
 
 def play(n):
-    #continue here
-    pass
+    try:
+        n = eval(n)
+    except:
+        n = n
+    stream = music21.stream.Stream()
+    if type(n) == float:
+        note = music21.note.Rest()
+        note.duration = music21.duration.Duration(n)
+        stream.append(note)
+    else:
+        try:
+            note = music21.note.Note(n[0])
+            note.duration = music21.duration.Duration(n[1])
+            stream.append(note)
+        except:
+            chord = music21.chord.Chord(n[0])
+            chord.duration = music21.duration.Duration(n[1])
+            stream.append(chord)
 
-    # create a music21 note object for the C# note
-    note_obj = note.Note('C#')
-
-    # get the pitch object for the note
-    pitch_obj = note_obj.pitch
-
-    # get the frequency of the pitch object
-    frequency = pitch_obj.frequency
-
-    # create a Tone object at the frequency of the C# note
-    c_sharp = Tone(frequency)
-
-    # generate a sine wave at the C# frequency for 1.5 seconds
-    chord = c_sharp.to_audio_segment(duration=1500)
-
-    # play the chord
-    chord.play()
+    realtime.StreamPlayer(stream).play()
 
 
 # Start a new thread to receive messages from the server

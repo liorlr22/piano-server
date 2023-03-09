@@ -1,11 +1,11 @@
 import socket
+import struct
 import threading
 import os
-import time
-
 from music21 import *
 import tkinter as tk
 from tkinter import messagebox
+import pickle
 
 # List to hold connected clients
 clients = []
@@ -17,6 +17,7 @@ to_play = []
 
 def play(f):
     global to_play
+    to_play = []
     us = environment.UserSettings()
     us.autoDownload = 'allow'
     # Load the XML file
@@ -39,11 +40,8 @@ def play(f):
             to_play.append((element.pitch.nameWithOctave, element.duration.quarterLength))
         elif isinstance(element, chord.Chord):
             to_play.append((element.pitchedCommonName, element.duration.quarterLength))
-
-    # midi_file = 'output.mid'
-    # midi_player = midi.realtime.StreamPlayer(score)
-    # midi_player.play()
-    # score.write('midi', fp=midi_file)
+        elif element.isRest:
+            to_play.append(element.quarterLength)
 
 
 def handle_client(clientsocket, clientaddr):
@@ -70,7 +68,7 @@ def handle_client(clientsocket, clientaddr):
                     c.send(response.encode('utf-8'))
         except socket.error as e:
             # Client socket error occurred, assume client has disconnected
-            print("> Client disconnected with error")
+            messagebox.showerror("Error", f"Client disconnected with error '{e}'.")
             break
 
     # Remove the client from the list of connected clients
@@ -83,7 +81,7 @@ def handle_client(clientsocket, clientaddr):
 def server_console():
     # This function listens for input from the server console
     while True:
-        message = str(input("> "))
+        message = str(input(" "))
         for c in clients:
             c.send(message.encode('utf-8'))
 
@@ -142,11 +140,14 @@ def open_window():
         def playMusic():
             global to_play
             play(name)
-            # Send the name of the MIDI file to the server
-            for p in to_play:
-                message = str(p)
-                for c in clients:
-                    c.send(message.encode('utf-8'))
+            # Send the name of the MIDI file to the client
+            serialized = pickle.dumps(to_play)
+            # Send the length of the serialized data in the message header
+            message = struct.pack('>Q', len(serialized)) + serialized
+            print(to_play)
+            # Send the message to all connected clients
+            for c in clients:
+                c.sendall(message)
 
         threading.Thread(target=playMusic).start()
 
@@ -182,7 +183,7 @@ def open_window():
 
 
 if __name__ == '__main__':
-    server = threading.Thread(target=run_server)
+    server = threading.Thread(target=startServer)
     window = threading.Thread(target=open_window)
 
     server.start()
