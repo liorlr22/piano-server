@@ -1,25 +1,27 @@
+import os
+import pickle
 import socket
 import struct
 import threading
-import os
-from music21 import *
 import tkinter as tk
 from tkinter import messagebox
-import pickle
+
+from music21 import *
 
 # List to hold connected clients
 clients = []
 notes_to_parse = None
 part_stream = None
-
 to_play = []
 
 
 def play(f):
     global to_play
     to_play = []
+
     us = environment.UserSettings()
     us.autoDownload = 'allow'
+
     # Load the XML file
     file = f'resources/midi/{f}'
     score = converter.parse(file)
@@ -34,6 +36,7 @@ def play(f):
 
     # Get all the notes and chords in the score
     notes_to_parse = part_stream.flat.notesAndRests
+
     # Iterate over notes and print pitch and duration
     for element in notes_to_parse:
         if isinstance(element, note.Note):
@@ -57,7 +60,7 @@ def handle_client(clientsocket, clientaddr):
 
             # Process the received data
             message = data.decode('utf-8')
-            response = "Client {} said: {}".format(clientaddr, message)
+            response = f"Client {clientaddr} said: {message}"
 
             # Send the response back to the client
             clientsocket.send(response.encode('utf-8'))
@@ -81,12 +84,12 @@ def handle_client(clientsocket, clientaddr):
 def server_console():
     # This function listens for input from the server console
     while True:
-        message = str(input(" "))
+        message = input(" ")
         for c in clients:
             c.send(message.encode('utf-8'))
 
 
-def startServer():
+def start_server():
     # Create a socket object
     serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -110,7 +113,7 @@ def startServer():
         # Wait for a connection
         clientsocket, clientaddr = serversocket.accept()
 
-        print(f"Got a connection from {str(clientaddr)}")
+        print(f"Got a connection from {clientaddr}")
 
         # Add the client to the list of connected clients
         clients.append(clientsocket)
@@ -121,7 +124,7 @@ def startServer():
 
 
 def run_server():
-    server_thread = threading.Thread(target=startServer())
+    server_thread = threading.Thread(target=start_server)
     server_thread.start()
 
 
@@ -183,7 +186,7 @@ def open_window():
 
 
 if __name__ == '__main__':
-    server = threading.Thread(target=startServer)
+    server = threading.Thread(target=start_server)
     window = threading.Thread(target=open_window)
 
     server.start()
