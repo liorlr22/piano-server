@@ -5,8 +5,7 @@ import struct
 import threading
 import tkinter as tk
 from tkinter import messagebox
-
-from music21 import *
+import music21 as m21
 
 # List to hold connected clients
 clients = []
@@ -18,33 +17,14 @@ to_play = []
 def play(f):
     global to_play
     to_play = []
-
-    us = environment.UserSettings()
-    us.autoDownload = 'allow'
-
-    # Load the XML file
-    file = f'resources/midi/{f}'
-    score = converter.parse(file)
-
-    # Extract the notes and other musical elements
-
-    # Find the first part in the score
-    try:
-        part_stream = score.parts.stream()[0]
-    except:
-        part_stream = score
-
-    # Get all the notes and chords in the score
-    notes_to_parse = part_stream.flat.notesAndRests
-
-    # Iterate over notes and print pitch and duration
-    for element in notes_to_parse:
-        if isinstance(element, note.Note):
-            to_play.append((element.pitch.nameWithOctave, element.duration.quarterLength))
-        elif isinstance(element, chord.Chord):
-            to_play.append((element.pitchedCommonName, element.duration.quarterLength))
-        elif element.isRest:
-            to_play.append(element.quarterLength)
+    midi_file = m21.converter.parse(f'resources/midi/{f}')
+    for element in midi_file.flat.notesAndRests:
+        if isinstance(element, m21.note.Note):
+            to_play.append(element)
+        elif isinstance(element, m21.chord.Chord):
+            to_play.append(element)
+        elif isinstance(element, m21.note.Rest):
+            to_play.append(element)
 
 
 def handle_client(clientsocket, clientaddr):
@@ -143,14 +123,10 @@ def open_window():
         def playMusic():
             global to_play
             play(name)
-            # Send the name of the MIDI file to the client
             serialized = pickle.dumps(to_play)
-            # Send the length of the serialized data in the message header
             message = struct.pack('>Q', len(serialized)) + serialized
-            print(to_play)
-            # Send the message to all connected clients
-            for c in clients:
-                c.sendall(message)
+            for conn in clients:
+                conn.sendall(message)
 
         threading.Thread(target=playMusic).start()
 

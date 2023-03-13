@@ -2,7 +2,8 @@ import pickle
 import socket
 import struct
 import threading
-import music21
+import time
+import music21 as m21
 from music21.midi import realtime
 
 # Create a socket object
@@ -27,18 +28,28 @@ def receive():
     global n_c, serialized
     message_header = client_socket.recv(8)
     message_length = struct.unpack('>Q', message_header)[0]
-
+    #
     serialized = b''
     while len(serialized) < message_length:
         remaining = message_length - len(serialized)
-        data = client_socket.recv(min(remaining, 1024))
+        data = client_socket.recv(min(remaining, 2048))
         if not data:
             break
         serialized += data
+    #
+    # n_c = pickle.loads(serialized)
+    # for n in n_c:
+    #     play(str(n))
 
-    n_c = pickle.loads(serialized)
-    for n in n_c:
-        play(str(n))
+    midi_file = m21.stream.Stream()
+
+    toPlay = pickle.loads(serialized)
+    for i in toPlay:
+        midi_file.append(i)
+
+    midi_out = m21.midi.realtime.StreamPlayer(midi_file)
+    midi_out.play()
+    time.sleep(midi_file.duration.quarterLength)  # Wait for the song to finish playing
 
 
 def play(n):
