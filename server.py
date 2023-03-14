@@ -18,13 +18,26 @@ def play(f):
     global to_play
     to_play = []
     midi_file = m21.converter.parse(f'resources/midi/{f}')
-    for element in midi_file.flat.notesAndRests:
-        if isinstance(element, m21.note.Note):
+    # for element in midi_file.flat.notesAndRests:
+    #     if isinstance(element, m21.note.Note):
+    #         to_play.append(element)
+    #     elif isinstance(element, m21.chord.Chord):
+    #         to_play.append(element)
+    #     elif isinstance(element, m21.note.Rest):
+    #         to_play.append(element)
+
+    # Iterate over each element (note, chord, rest) in the MIDI file
+    for element in midi_file.flat:
+        # If the element is a Note or Chord, append it to the list
+        if isinstance(element, m21.note.Note) or isinstance(element, m21.chord.Chord):
             to_play.append(element)
-        elif isinstance(element, m21.chord.Chord):
-            to_play.append(element)
+        # If the element is a Rest, create a new Rest object with the same duration
+        # and append it to the list
         elif isinstance(element, m21.note.Rest):
-            to_play.append(element)
+            rest_duration = element.duration.quarterLength
+            rest = m21.note.Rest()
+            rest.duration = m21.duration.Duration(rest_duration)
+            to_play.append(rest)
 
 
 def handle_client(clientsocket, clientaddr):
@@ -123,6 +136,7 @@ def open_window():
         def playMusic():
             global to_play
             play(name)
+            print(to_play)
             serialized = pickle.dumps(to_play)
             message = struct.pack('>Q', len(serialized)) + serialized
             for conn in clients:
@@ -142,6 +156,10 @@ def open_window():
     # Add title label to the frame
     title = tk.Label(frame, text="Piano Server", font=("Arial", 24))
     title.grid(row=0, column=0, pady=20, sticky="n", columnspan=len(midi_files))
+
+    # Add label for the number of connected clients
+    num_clients_label = tk.Label(frame, text="Clients: 0", font=("Arial", 16))
+    num_clients_label.grid(row=1, column=0, pady=10, sticky="w", columnspan=5)
 
     # Calculate number of columns needed
     num_files = len(midi_files)

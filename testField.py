@@ -1,4 +1,4 @@
-import music21
+from music21 import *
 import os
 
 
@@ -6,8 +6,8 @@ def main():
     # Load the XML file
     midi_files = os.listdir("resources/midi/")
     xml_files = os.listdir("resources/xml/")
-    file = 'resources/midi/rush E.mid'
-    score = music21.converter.parse(file)
+    file = 'resources/midi/Israel.mid'
+    score = converter.parse(file)
 
     # Extract the notes and other musical elements
     notes_to_parse = None
@@ -29,7 +29,7 @@ def main():
             print(f"Pitch: {element.pitchedCommonName}, Duration: {element.duration.quarterLength}")
 
     midi_file = 'output.mid'
-    midi_player = music21.midi.realtime.StreamPlayer(score)
+    midi_player = midi.realtime.StreamPlayer(score)
     midi_player.play()
     score.write('midi', fp=midi_file)
 
@@ -42,4 +42,4 @@ def test(note_name, duration):
 
 
 if __name__ == '__main__':
-    test()
+    main()

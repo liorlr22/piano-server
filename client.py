@@ -45,11 +45,12 @@ def receive():
 
     toPlay = pickle.loads(serialized)
     for i in toPlay:
+        # if not i.duration.quarterLength == 4.0:
+        print(i)
         midi_file.append(i)
 
     midi_out = m21.midi.realtime.StreamPlayer(midi_file)
     midi_out.play()
-    time.sleep(midi_file.duration.quarterLength)  # Wait for the song to finish playing
 
 
 def play(n):
@@ -57,19 +58,19 @@ def play(n):
         n = eval(n)
     except:
         n = n
-    stream = music21.stream.Stream()
+    stream = m21.stream.Stream()
     if type(n) == float:
-        note = music21.note.Rest()
-        note.duration = music21.duration.Duration(n)
+        note = m21.note.Rest()
+        note.duration = m21.duration.Duration(n)
         stream.append(note)
     else:
         try:
-            note = music21.note.Note(n[0])
-            note.duration = music21.duration.Duration(n[1])
+            note = m21.note.Note(n[0])
+            note.duration = m21.duration.Duration(n[1])
             stream.append(note)
         except:
-            chord = music21.chord.Chord(n[0])
-            chord.duration = music21.duration.Duration(n[1])
+            chord = m21.chord.Chord(n[0])
+            chord.duration = m21.duration.Duration(n[1])
             stream.append(chord)
 
     realtime.StreamPlayer(stream).play()
