@@ -1,12 +1,14 @@
 from music21 import *
 import os
 
+play = []
+
 
 def main():
     # Load the XML file
     midi_files = os.listdir("resources/midi/")
     xml_files = os.listdir("resources/xml/")
-    file = 'resources/midi/Israel.mid'
+    file = 'resources/midi/rush E.mid'
     score = converter.parse(file)
 
     # Extract the notes and other musical elements
@@ -24,9 +26,11 @@ def main():
     # Iterate over notes and print pitch and duration
     for element in notes_to_parse:
         if isinstance(element, note.Note):
-            print(f"Pitch: {element.pitch.nameWithOctave}, Duration: {element.duration.quarterLength}")
+            play.append(f"Pitch: {element.pitch.nameWithOctave}, Duration: {element.duration.quarterLength}")
         elif isinstance(element, chord.Chord):
-            print(f"Pitch: {element.pitchedCommonName}, Duration: {element.duration.quarterLength}")
+            play.append(f"Pitch: {element.pitchedCommonName}, Duration: {element.duration.quarterLength}")
+        elif isinstance(element, note.Rest):
+            play.append(f"Rest: {element.duration.quarterLength}")
 
     midi_file = 'output.mid'
     midi_player = midi.realtime.StreamPlayer(score)
@@ -35,10 +39,9 @@ def main():
 
 
 def test(note_name, duration):
-    note = music21.note.Note(note_name)
-    note.duration = music21.duration.Duration(duration)
+    n = note.Note(note_name)
+    n.duration = duration.Duration(duration)
     note_str = note.musicxml  # convert the note object to musicxml string
-
 
 
 if __name__ == '__main__':

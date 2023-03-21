@@ -1,11 +1,14 @@
-import os
-import pickle
-import socket
-import struct
-import threading
-import tkinter as tk
-from tkinter import messagebox
-import music21 as m21
+try:
+    import os
+    import pickle
+    import socket
+    import struct
+    import threading
+    import tkinter as tk
+    from tkinter import messagebox
+    import music21 as m21
+except ModuleNotFoundError as e:
+    print(e)
 
 # List to hold connected clients
 clients = []
@@ -18,26 +21,20 @@ def play(f):
     global to_play
     to_play = []
     midi_file = m21.converter.parse(f'resources/midi/{f}')
-    # for element in midi_file.flat.notesAndRests:
-    #     if isinstance(element, m21.note.Note):
-    #         to_play.append(element)
-    #     elif isinstance(element, m21.chord.Chord):
-    #         to_play.append(element)
-    #     elif isinstance(element, m21.note.Rest):
-    #         to_play.append(element)
 
-    # Iterate over each element (note, chord, rest) in the MIDI file
+    # Iterate through each element in the MIDI file
     for element in midi_file.flat:
-        # If the element is a Note or Chord, append it to the list
-        if isinstance(element, m21.note.Note) or isinstance(element, m21.chord.Chord):
-            to_play.append(element)
-        # If the element is a Rest, create a new Rest object with the same duration
-        # and append it to the list
+
+        # Check if the element is a chord, a rest, or a note with pitch
+        if isinstance(element, m21.chord.Chord):
+            # Append the chord to the array as a list of its pitch classes
+            to_play.append(list(element.pitchClasses))
         elif isinstance(element, m21.note.Rest):
-            rest_duration = element.duration.quarterLength
-            rest = m21.note.Rest()
-            rest.duration = m21.duration.Duration(rest_duration)
-            to_play.append(rest)
+            # Append the rest to the array as the string 'rest'
+            to_play.append('rest')
+        elif isinstance(element, m21.note.Note):
+            # Append the note to the array as its pitch class
+            to_play.append(element.pitch)
 
 
 def handle_client(clientsocket, clientaddr):
@@ -140,7 +137,7 @@ def open_window():
             serialized = pickle.dumps(to_play)
             message = struct.pack('>Q', len(serialized)) + serialized
             for conn in clients:
-                conn.sendall(message)
+                conn.sendall(serialized)
 
         threading.Thread(target=playMusic).start()
 
