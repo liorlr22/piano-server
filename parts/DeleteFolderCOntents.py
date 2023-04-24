@@ -1,11 +1,13 @@
 import os
-import glob
 
 
 def delete(path):
     try:
-        files = glob.glob(path)
-        for f in files:
-            os.remove(f)
+        for f in os.listdir(path):
+            os.remove(os.path.join(path, f))
     except WindowsError as e:
         print(f"ERROR: {e}")
+
+
+if __name__ == '__main__':
+    delete("opt-cropped")

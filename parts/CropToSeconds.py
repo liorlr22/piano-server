@@ -51,4 +51,4 @@ def crop(path):
 
 
 if __name__ == '__main__':
-    crop("../resources/midi/the small Jehonathan.mid")
+    crop("../resources/midi/rush E.mid")
