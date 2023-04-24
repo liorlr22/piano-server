@@ -1,12 +1,7 @@
 import os
 import socket
-from mido import MidiFile
+from parts import GetLength
 import tkinter
-
-
-def midi_length(path):
-    mid = MidiFile(path)
-    return mid.length
 
 
 def send_files(client_socket, directory):
@@ -40,7 +35,3 @@ def main():
         # Close client connection
         client_socket.close()
         print(f'Connection to {client_address} closed')
-
-
-if __name__ == '__main__':
-    print(midi_length("../parts/opt-cropped/track_0_segment_1.mid"))

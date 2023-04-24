@@ -1,7 +1,10 @@
 import mido
 from DeleteFolderContents import delete
+from GetTempo import temp
+
 
 FOLDER = 'opt-cropped/'
+
 
 def crop(path):
     delete(FOLDER)
@@ -10,7 +13,7 @@ def crop(path):
 
     # Calculate the length of each segment based on 1 second
     ticks_per_beat = mid.ticks_per_beat
-    ticks_per_second = mido.second2tick(1, ticks_per_beat, mido.bpm2tempo(120))
+    ticks_per_second = mido.second2tick(1, ticks_per_beat, mido.bpm2tempo(temp(path)))
     segment_length = ticks_per_second
 
     # Iterate over each track in the MIDI file
