@@ -1,20 +1,17 @@
 import mido
 from DeleteFolderContents import delete
 
-
 FOLDER = 'opt-cropped/'
-
 
 def crop(path):
     delete(FOLDER)
     # load the MIDI file
     mid = mido.MidiFile(path)
 
-    # Calculate the length of each segment based on the actual duration of the MIDI file
+    # Calculate the length of each segment based on 1 second
     ticks_per_beat = mid.ticks_per_beat
-    total_ticks = sum([msg.time for track in mid.tracks for msg in track])
-    total_beats = mido.tick2second(total_ticks, ticks_per_beat, mido.bpm2tempo(120)) / 60 * 120
-    segment_length = total_ticks / total_beats
+    ticks_per_second = mido.second2tick(1, ticks_per_beat, mido.bpm2tempo(120))
+    segment_length = ticks_per_second
 
     # Iterate over each track in the MIDI file
     for track_idx, track in enumerate(mid.tracks):
@@ -51,3 +48,7 @@ def crop(path):
         mid_new = mido.MidiFile()
         mid_new.tracks.append(current_segment)
         mid_new.save(f'{FOLDER}track_{track_idx}_segment_{segment_idx}.mid')
+
+
+if __name__ == '__main__':
+    crop("../resources/midi/the small Jehonathan.mid")

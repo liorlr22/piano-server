@@ -48,4 +48,4 @@ def merge(path):
         merged_mid.save(f'{FOLDER}segment_{index}.mid')
 
 
-merge("../resources/midi/Giorno Giovana theme.mid")
+merge("../resources/midi/rush E.mid")
