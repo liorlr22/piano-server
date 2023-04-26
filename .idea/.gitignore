@@ -1,3 +1,9 @@
 # Default ignored files
 /shelf/
 /workspace.xml
+*.mid
+/parts/opt-cropped/
+/parts/opt-merged/
+/resources/
+/new_socket_files/receive/
+/new_socket_files/send/
