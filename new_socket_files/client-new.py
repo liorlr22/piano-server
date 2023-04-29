@@ -28,9 +28,6 @@ def main():
     directory = 'receive/'
     receive_files(client_socket, directory)
 
-    # Close client connection
-    client_socket.close()
-
 
 if __name__ == '__main__':
     main()

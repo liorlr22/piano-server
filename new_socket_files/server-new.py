@@ -1,20 +1,57 @@
-import os
-import socket
-from parts import GetLength
-import tkinter as tk
-from tkinter import messagebox
+try:
+    import os
+    import socket
+    from mido import MidiFile
+    import tkinter as tk
+    from tkinter import messagebox
+    from parts.CropToSeconds import crop
+except ModuleNotFoundError as e:
+    import subprocess
+    print(f"Error: {e}")
+    command = 'pip install -r requirements.txt'
+    process = subprocess.Popen(command.split(), stdout=subprocess.PIPE)
+    raise
+
+clients = []
+
+
+def get_midi_length(path):
+    mid = MidiFile(path)
+    return mid.length
+
+
+def cumulative_sum(lst, index):
+    if index >= len(lst):
+        return None
+
+    return sum(lst[:index + 1])
 
 
 def send_files(client_socket, directory):
-    for filename in os.listdir(directory):
-        filepath = os.path.join(directory, filename)
-        with open(filepath, 'rb') as f:
-            client_socket.sendall(filename.encode() + b'\n')
-            while True:
-                filedata = f.read(1024)
-                if not filedata:
-                    break
-                client_socket.sendall(filedata)
+    print("sending")
+    # Count the number of files in the directory
+    file_count = len(os.listdir(directory))
+
+    # Divide the file count by the number of clients
+    files_per_client = file_count // len(clients)
+
+    # Iterate over the clients
+    for i, client_socket in enumerate(clients):
+        # Calculate the starting and ending indices for this client's files
+        start_index = i * files_per_client
+        end_index = (i + 1) * files_per_client
+
+        # Iterate over the files in the directory and send the appropriate ones to this client
+        for j, filename in enumerate(os.listdir(directory)):
+            if start_index <= j < end_index:
+                filepath = os.path.join(directory, filename)
+                with open(filepath, 'rb') as f:
+                    client_socket.sendall(filename.encode() + b'\n')
+                    while True:
+                        filedata = f.read(1024)
+                        if not filedata:
+                            break
+                        client_socket.sendall(filedata)
 
 
 def open_window():
@@ -55,7 +92,7 @@ def open_window():
     # Add MIDI buttons to the frame
     for i in range(num_files):
         btn = tk.Button(frame, text=midi_files[i].rstrip(".mid"), padx=10,
-                        command=lambda name=midi_files[i]: on_button_click(name),
+                        command=lambda name=midi_files[i], cs=clients[0][0]: on_button_click(name, cs),
                         width=15, wraplength=100, height=2)
         btn.grid(row=(i // num_cols) + 1, column=i % num_cols, pady=5)
 
@@ -63,26 +100,32 @@ def open_window():
     window.mainloop()
 
 
-def on_button_click(name):
-    pass
+def on_button_click(name, client_socket):
+    crop(f"../resources/midi/{name}")
+    # Send files to client
+    directory = '../parts/opt-merged'
+    send_files(client_socket, directory)
 
 
 def main():
     # Set up server socket
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind(('localhost', 8888))
-    server_socket.listen(1)
+    server_socket.listen()
     print('Server started, waiting for connections...')
 
     while True:
         # Accept incoming client connection
         client_socket, client_address = server_socket.accept()
         print(f'Client connected from {client_address}')
+        clients.append((client_socket, client_address))
 
-        # Send files to client
-        directory = '../parts/opt-merged'
-        send_files(client_socket, directory)
+        open_window()
 
         # Close client connection
         client_socket.close()
         print(f'Connection to {client_address} closed')
+
+
+if __name__ == '__main__':
+    main()

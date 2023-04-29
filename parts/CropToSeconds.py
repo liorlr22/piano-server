@@ -1,7 +1,13 @@
-import mido
-from DeleteFolderContents import delete
-from GetTempo import temp
-
+try:
+    import mido
+    from parts.DeleteFolderContents import delete
+    from parts.GetTempo import temp
+except ModuleNotFoundError as e:
+    import subprocess
+    print(f"Error: {e}")
+    command = 'pip install -r requirements.txt'
+    process = subprocess.Popen(command.split(), stdout=subprocess.PIPE)
+    raise
 
 FOLDER = 'opt-cropped/'
 
