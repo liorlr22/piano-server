@@ -1,0 +1,4 @@
+*.midi
+.idea/
+__pycache__/
+resources/
