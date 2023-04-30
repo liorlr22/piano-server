@@ -1,4 +1,4 @@
-*.midi
+*.mid
 .idea/
 __pycache__/
 resources/
