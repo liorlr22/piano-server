@@ -6,12 +6,14 @@ try:
     from shutil import rmtree
 except ModuleNotFoundError as e:
     import subprocess
+
     print(f"Error: {e}")
     command = 'pip install -r requirements.txt'
     process = subprocess.Popen(command.split(), stdout=subprocess.PIPE)
     raise
 
 FOLDER = Path('opt-cropped/')
+
 
 def create_midi_part(track, ref_midi):
     mid_new = mido.MidiFile()
@@ -20,6 +22,7 @@ def create_midi_part(track, ref_midi):
 
     mid_new.tracks.append(track)
     return mid_new
+
 
 def track_split(track: mido.MidiTrack, segment_length, add_end_of_track=True):
     current_time = 0
@@ -49,6 +52,7 @@ def track_split(track: mido.MidiTrack, segment_length, add_end_of_track=True):
 
     yield current_segment
 
+
 def crop(path):
     rmtree(FOLDER, ignore_errors=True)
     FOLDER.mkdir(exist_ok=True, parents=True)
@@ -63,6 +67,7 @@ def crop(path):
     for track_idx, track in enumerate(mid.tracks):
         for segment_idx, segment in enumerate(track_split(track, segment_length)):
             create_midi_part(segment, mid).save(FOLDER / f'track_{track_idx}_segment_{segment_idx}.mid')
+
 
 if __name__ == '__main__':
     crop("../resources/midi/rush E.mid")
