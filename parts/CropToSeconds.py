@@ -30,7 +30,6 @@ def track_split(track: mido.MidiTrack, segment_length, add_end_of_track=True):
 
     # Iterate over each message in the track
     for msg in track:
-
         # Check if we have reached the end of the current segment
         if current_time >= segment_length:
             # Add the end of track message to the current segment
