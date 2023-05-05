@@ -13,6 +13,12 @@ def on_button_click(file_name: str):
     print(file_name)
 
 
+def start_gui():
+    customtkinter.set_appearance_mode("System")
+    customtkinter.set_default_color_theme("blue")
+    app = App()
+    app.mainloop()
+
 
 class App(customtkinter.CTk):
     def __init__(self):
@@ -98,7 +104,6 @@ class ButtonFrame(customtkinter.CTkFrame):
 
 
 if __name__ == '__main__':
-    customtkinter.set_appearance_mode("System")
-    customtkinter.set_default_color_theme("blue")
-    app = App()
-    app.mainloop()
+    window_thread = threading.Thread(target=start_gui)
+
+    window_thread.start()

@@ -5,12 +5,7 @@ try:
     from pathlib import Path
     from shutil import rmtree
 except ModuleNotFoundError as e:
-    import subprocess
-
     print(f"Error: {e}")
-    command = 'pip install -r requirements.txt'
-    process = subprocess.Popen(command.split(), stdout=subprocess.PIPE)
-    raise
 
 FOLDER = Path('opt-cropped/')
 

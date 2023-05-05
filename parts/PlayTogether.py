@@ -1,18 +1,12 @@
 import mido
 from mido import MidiFile
-import threading
-import pygame
-from music21 import midi, stream, converter
-from time import sleep
-import miditime.miditime as miditime
+from music21 import midi, stream
 
 
 def get_midi_length(path):
     mid = MidiFile(path)
     return mid.length
 
-
-# Define a function to play a MIDI file in real-time from a specific time
 
 def play_midi_from_time(midi_file, start_time, end_time=None):
     if end_time is None:
