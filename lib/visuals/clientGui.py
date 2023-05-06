@@ -45,6 +45,7 @@ class ClientApp(ctk.CTk):
 
     def connect(self):
         self.ready = True
+        print(True)
 
     def getIP(self):
         return self.ip_entry.get()

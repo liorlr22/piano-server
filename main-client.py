@@ -5,9 +5,9 @@ from lib.net import PianoClient
 from lib.visuals import ClientApp
 
 
-# Add GUI Client
+# TODO: Add GUI Client
 #     - Where to connect
-# Add Play MIDI
+# TODO: Add Play MIDI
 #     - Create Midi FILE
 #     - add midi track with same properties
 #     - add midi message(s)
@@ -15,29 +15,43 @@ from lib.visuals import ClientApp
 
 
 class Main:
-    def __init__(self) -> None:
+    def __init__(self, ip: str, port: int) -> None:
         self.app = None
         self.client = None
-        self.ip, self.port = None, None
+        self.ip, self.port = ip, port
 
-    def start(self):
-        thread_gui = threading.Thread(target=self.start_gui).start()
-        time.sleep(0.1)
-        client_thread = threading.Thread(target=self.connect).start()
+    def connect(self):
+        if self.client is None:
+            self.client = PianoClient(self.ip, self.port)
+        self.client.connect()
+
+
+class ClientGui:
+    def __init__(self, app: ClientApp):
+        self.main = Main(ip="", port=0)
+        self.app = app
+        self.app.run()
 
     def connect(self):
         if self.app.ready:
-            self.client = PianoClient(
-                host=self.ip,
-                port=self.port
-            )
-            self.client.connect()
+            self.main = Main(ip=self.app.getIP(), port=self.app.getPort())
+            self.main.connect()
 
-    def start_gui(self):
-        self.app = ClientApp()
-        self.app.run()
+
+def run_client_gui():
+    gui = ClientGui(app)
+    gui.app.run()
 
 
 if __name__ == '__main__':
-    main = Main()
-    main.start()
+    app = ClientApp()
+    app.run()
+
+    while True:
+        if app.ready:
+            print("ready")
+            gui_thread = threading.Thread(target=run_client_gui)
+            gui_thread.start()
+            break
+        print(False)
+        time.sleep(0.1)

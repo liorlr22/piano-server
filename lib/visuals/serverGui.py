@@ -115,6 +115,6 @@ class ButtonFrame(ctk.CTkFrame):
 
 
 if __name__ == '__main__':
-    window_thread = threading.Thread(target=start_gui)
+    window_thread = threading.Thread(target=start_gui_server())
 
     window_thread.start()
