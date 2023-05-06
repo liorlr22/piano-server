@@ -29,7 +29,6 @@ class Main:
         thread_Gui = threading.Thread(target=self.start_gui)
         thread_Gui.start()
         server_thread = self.server.start_server_thread()
-        print(f"Server started at {self.host}:{self.port}")
 
         midi = mido.MidiFile(r"resources\midi\rush E.mid")
         streamer = MidiStreamer(midi)
@@ -37,7 +36,6 @@ class Main:
             self.server.broadcast(dumps(msg))
 
         server_thread.join()
-        print("Server stopped")
 
     def start_gui(self) -> None:
         self.app = ServerApp()
@@ -46,8 +44,8 @@ class Main:
 
     def on_closing(self) -> None:
         if messagebox.askokcancel("Quit", "Are you sure you want to exit?\nServer will be closed too"):
-            self.server.stop_server()
             self.app.destroy()
+            self.server.stop_server()
 
 
 if __name__ == '__main__':

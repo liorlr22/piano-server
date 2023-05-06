@@ -2,6 +2,7 @@ import threading
 from tkinter import messagebox
 import customtkinter as ctk
 import os
+from ..net.server import PianoServer
 
 
 def change_appearance_mode_event(new_appearance_mode: str):
