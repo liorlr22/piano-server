@@ -58,6 +58,19 @@ class PianoServer:
             client_thread = threading.Thread(target=self.handle_client, args=(client,))
             client_thread.start()
 
+    def stop_server(self) -> None:
+        """
+        Stops the piano server by closing the server socket and all client sockets.
+        """
+        if self.clients:
+            # Close all client sockets.
+            for client in self.clients:
+                client.close()
+            self.clients.clear()
+
+        # Close the server socket.
+        self.sock.close()
+
     def start_server_thread(self) -> threading.Thread:
         """
         Starts the piano server in a new thread and listens for incoming client connections.
@@ -79,6 +92,7 @@ class PianoServer:
             client (socket): The client socket to handle communication with.
         """
         self.clients.append(client)
+        print(f"Client connected at {client}")
 
         while True:
             pass
