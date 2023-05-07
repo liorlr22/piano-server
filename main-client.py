@@ -1,3 +1,5 @@
+from tkinter import messagebox
+
 from lib.visuals import ClientApp
 
 
@@ -9,10 +11,14 @@ from lib.visuals import ClientApp
 #     - add midi message(s)
 #     - Play Midi FILE
 
-def main() -> None:
-    app = ClientApp()
-    app.run()
+class Main:
+    def __init__(self) -> None:
+        self.app = ClientApp()
+
+    def run_gui(self):
+        self.app.run()
 
 
 if __name__ == '__main__':
-    main()
+    gui = Main()
+    gui.run_gui()
