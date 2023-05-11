@@ -4,7 +4,7 @@ from tkinter import messagebox as msg
 import re
 
 
-def start_gui_client():
+def start_gui_client() -> None:
     ctk.set_appearance_mode("System")
     ctk.set_default_color_theme("blue")
     app = ClientApp()
@@ -13,17 +13,21 @@ def start_gui_client():
 
 class ClientApp(ctk.CTk):
 
-    def __init__(self, connect_callback: callable = None):
-        super().__init__()
-        ctk.set_appearance_mode("system")
-        ctk.set_default_color_theme("blue")
+    def __init__(self, connect_callback: callable = None) -> None:
+        """This function starts the GUI client.
 
-        self.width = 400
-        self.height = 300
+        Args:
+            ip_address: The IP address of the server.
+            port_number: The port number of the server.
+        """
+
+        super().__init__()
+        self.window_width = 400
+        self.window_height = 300
         self.client = None
         self.on_connect = connect_callback
 
-        self.geometry(f"{self.width}x{self.height}")
+        self.geometry(f"{self.window_width}x{self.window_height}")
         self.resizable(False, False)
         self.title("Client Connect")
         self.iconbitmap("resources/pictures/electric.ico")
@@ -46,10 +50,10 @@ class ClientApp(ctk.CTk):
         self.port_entry.pack(pady=12, padx=10)
         self.button.pack(pady=12, padx=10)
 
-    def run(self):
+    def run(self) -> None:
         self.mainloop()
 
-    def connect(self):
+    def connect(self) -> None:
         try:
             if not re.match(r"[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}", self.getIP()):
                 msg.showerror("Error", "Not a valid IP format")
@@ -75,7 +79,7 @@ class ClientApp(ctk.CTk):
         if event.keysym == 'Return' and self.getIP() and self.getPort():
             self.button.invoke()
 
-    def focus_next_widget(self, event):
+    def focus_next_widget(self, event) -> str:
         event.widget.tk_focusNext().focus()
         return "break"
 

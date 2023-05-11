@@ -1,1 +1,1 @@
-from .streamer import MidiStreamer
+from .streamer import MidiStreamer, get_range

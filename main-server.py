@@ -3,7 +3,6 @@ from tkinter import messagebox
 import mido
 from pickle import dumps, loads
 from lib.net import PianoServer
-from lib.midi import MidiStreamer
 from lib.visuals import ServerApp
 
 
@@ -30,11 +29,7 @@ class Main:
         thread_Gui.start()
         server_thread = self.server.start_server_thread()
 
-        midi = mido.MidiFile(r"resources\midi\rush E.mid")
-        streamer = MidiStreamer(midi)
-        for msg in streamer.get_midi_file():
-            self.server.broadcast(dumps(msg))
-
+        midi = r"../midi/example.mid"
         server_thread.join()
 
     def start_gui(self) -> None:
