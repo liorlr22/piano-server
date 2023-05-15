@@ -1,10 +1,6 @@
-from tkinter import messagebox
-
 from lib.visuals import ClientApp
 
 
-# TODO: Add GUI Client
-#     - Where to connect
 # TODO: Add Play MIDI
 #     - Create Midi FILE
 #     - add midi track with same properties

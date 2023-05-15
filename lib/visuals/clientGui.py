@@ -1,5 +1,6 @@
 import customtkinter as ctk
 from ..net import PianoClient
+from ..visuals.midiGui import MidiApp
 from tkinter import messagebox as msg
 import re
 
@@ -9,6 +10,14 @@ def start_gui_client() -> None:
     ctk.set_default_color_theme("blue")
     app = ClientApp()
     app.run()
+
+
+def start_midi_client() -> None:
+    ctk.set_appearance_mode("System")
+    ctk.set_default_color_theme("blue")
+    midi_app = MidiApp()
+    midi_app.run()
+    # TODO: close the connection if the window is closed
 
 
 class ClientApp(ctk.CTk):
@@ -65,7 +74,7 @@ class ClientApp(ctk.CTk):
             self.client.connect()
             self.destroy()
             print("opening midi window")
-            # TODO: open midi gui
+            start_midi_client()
         except ConnectionRefusedError as e:
             msg.showerror("Error", f"Couldn't connect to server\ncheck ip and port again (connection refused)")
 

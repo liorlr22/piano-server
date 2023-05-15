@@ -52,7 +52,7 @@ def get_range(number) -> list:
       A list of numbers from 1 to the input number.
     """
 
-    list_of_numbers = []
+    list_of_numbers = ['*']
     for i in range(1, number + 1):
         list_of_numbers.append(i)
 
@@ -60,7 +60,7 @@ def get_range(number) -> list:
 
 
 if __name__ == '__main__':
-    midi_file = "../../resources/midi/rush E.mid"
+    midi_file = "../../resources/midi/Little Jonny.mid"
     streamer = MidiStreamer(midi_file)
-    streamer.midi_to_musicxml(get_range(10))
+    streamer.midi_to_musicxml(get_range(2))
     streamer.musicxml_to_midi("example.midi")

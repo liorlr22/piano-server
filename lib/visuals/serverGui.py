@@ -9,10 +9,11 @@ def change_appearance_mode_event(new_appearance_mode: str):
     ctk.set_appearance_mode(new_appearance_mode)
 
 
-def on_button_click(file_name: str):
+def on_button_click(file_name: str, connected_clients: int = 5):
+    # TODO: instead of 5, parse the number of connected clients and broadcast it to them
     print(file_name)
     stream = MidiStreamer(f"resources/midi/{file_name}")
-    stream.midi_to_musicxml(get_range(5))
+    stream.midi_to_musicxml(get_range(connected_clients))
     stream.musicxml_to_midi(f"{file_name}")
 
 

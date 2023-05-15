@@ -29,7 +29,6 @@ class Main:
         thread_Gui.start()
         server_thread = self.server.start_server_thread()
 
-        midi = r"../midi/example.mid"
         server_thread.join()
 
     def start_gui(self) -> None:
