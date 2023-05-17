@@ -1,5 +1,6 @@
 import random
-from music21 import converter
+import music21
+from music21 import converter, stream
 import mido
 
 
@@ -25,23 +26,30 @@ class MidiStreamer:
         # Write the MIDI data to MusicXML
         midi_data.write('musicxml', self.__xml_file)
 
-    def musicxml_to_midi(self, output_file_path) -> None:
+    def musicxml_to_midi(self, output_file_path: str, desired_lyric: str) -> None:
         musicxml_data = converter.parse(self.__xml_file)
 
         # Retrieve the lyrics from the MusicXML data
         lyrics = []
+        score = stream.Stream()
         for element in musicxml_data.recurse().notes:
             lyric = element.lyric
-            if isinstance(lyric, str):
-                lyrics.append(lyric)
-            elif hasattr(lyric, 'text'):
-                lyrics.append(lyric.text)
+            if (isinstance(lyric, str) or hasattr(lyric, 'text')) and (lyric == desired_lyric or lyric == "*"):
+                lyrics.append(element)
+                score.append(element)
+            else:
+                duration = element.duration
+                rest_same = music21.note.Rest()
+                rest_same.duration = duration
+                lyrics.append(rest_same)
+                score.append(rest_same)
 
         # Write the MusicXML data to MIDI
         musicxml_data.write('midi', output_file_path)
+        score.write('midi', 'output.mid')
 
 
-def get_range(number) -> list:
+def get_range(number: int) -> list:
     """
     This function takes a number as input and returns a list of numbers from 1 to that number.
 
@@ -52,6 +60,7 @@ def get_range(number) -> list:
       A list of numbers from 1 to the input number.
     """
 
+    assert number >= 0, "number must be higher or equal to 0"
     list_of_numbers = ['*']
     for i in range(1, number + 1):
         list_of_numbers.append(i)
@@ -60,7 +69,7 @@ def get_range(number) -> list:
 
 
 if __name__ == '__main__':
-    midi_file = "../../resources/midi/Little Jonny.mid"
+    midi_file = "../../resources/midi/rush E.mid"
     streamer = MidiStreamer(midi_file)
-    streamer.midi_to_musicxml(get_range(2))
-    streamer.musicxml_to_midi("example.midi")
+    streamer.midi_to_musicxml(get_range(0))
+    streamer.musicxml_to_midi("example.mid", "1")
