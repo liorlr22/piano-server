@@ -4,6 +4,23 @@ from music21 import converter, stream
 import mido
 
 
+def save_identical_notes(musicxml_path, value, output_path):
+    # Load the MusicXML file
+    score = music21.converter.parse(musicxml_path)
+
+    # Create a new stream for the resulting notes
+    result_stream = music21.stream.Stream()
+
+    # Iterate over the notes in the score
+    for note in score.flat.getElementsByClass('Note'):
+        for lyric in note.lyrics:
+            if lyric.text == value:
+                # Add the note to the result stream
+                result_stream.append(note)
+    # Save the resulting stream as a MIDI file
+    result_stream.write('midi', fp=output_path)
+
+
 class MidiStreamer:
     def __init__(self, midi_file: str) -> None:
         self.__midi_file = midi_file
@@ -26,27 +43,9 @@ class MidiStreamer:
         # Write the MIDI data to MusicXML
         midi_data.write('musicxml', self.__xml_file)
 
-    def musicxml_to_midi(self, output_file_path: str, desired_lyric: str) -> None:
+    def musicxml_to_midi(self, output_file_path: str) -> None:
         musicxml_data = converter.parse(self.__xml_file)
-
-        # Retrieve the lyrics from the MusicXML data
-        lyrics = []
-        score = stream.Stream()
-        for element in musicxml_data.recurse().notes:
-            lyric = element.lyric
-            if (isinstance(lyric, str) or hasattr(lyric, 'text')) and (lyric == desired_lyric or lyric == "*"):
-                lyrics.append(element)
-                score.append(element)
-            else:
-                duration = element.duration
-                rest_same = music21.note.Rest()
-                rest_same.duration = duration
-                lyrics.append(rest_same)
-                score.append(rest_same)
-
-        # Write the MusicXML data to MIDI
         musicxml_data.write('midi', output_file_path)
-        score.write('midi', 'output.mid')
 
 
 def get_range(number: int) -> list:
@@ -61,7 +60,7 @@ def get_range(number: int) -> list:
     """
 
     assert number >= 0, "number must be higher or equal to 0"
-    list_of_numbers = ['*']
+    list_of_numbers = []
     for i in range(1, number + 1):
         list_of_numbers.append(i)
 
@@ -69,7 +68,9 @@ def get_range(number: int) -> list:
 
 
 if __name__ == '__main__':
-    midi_file = "../../resources/midi/rush E.mid"
+    midi_file = "../../resources/midi/yonatan.mid"
     streamer = MidiStreamer(midi_file)
-    streamer.midi_to_musicxml(get_range(0))
-    streamer.musicxml_to_midi("example.mid", "1")
+    # streamer.midi_to_musicxml([1])
+    streamer.musicxml_to_midi("output.mid")
+    save_identical_notes("example.xml", "1", "output.mid")
+    # TODO: rewrite midi to xml code
