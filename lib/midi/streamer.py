@@ -1,10 +1,10 @@
 import random
 import music21
 from music21 import converter, stream
-import mido
+from pathlib import Path
 
 
-def save_identical_notes(musicxml_path, value, output_path):
+def save_identical_notes(musicxml_path, value: str, output_path):
     # Load the MusicXML file
     score = music21.converter.parse(musicxml_path)
 
@@ -24,23 +24,18 @@ def save_identical_notes(musicxml_path, value, output_path):
 class MidiStreamer:
     def __init__(self, midi_file: str) -> None:
         self.__midi_file = midi_file
-        self.__xml_file = "example.xml"
+        self.name = f"{Path(self.__midi_file).name.rstrip('.mid')}"
+        self.__xml_file = f"{self.name}.xml"
 
-    def midi_to_musicxml(self, user_input) -> None:
-        # Parse the MIDI file
+    def midi_to_musicxml(self, lyrics) -> None:
         midi_data = converter.parse(self.__midi_file)
 
-        # Add user input as an attribute to each note in the MIDI data
-        for i, element in enumerate(midi_data.recurse().notes):
-            # Check if all numbers have been used as lyrics
-            if i % len(user_input) == 0:
-                # Shuffle the user input list randomly
-                random.shuffle(user_input)
-
-            # Add the next element from the shuffled user input list as a lyric to the current note
-            element.addLyric(str(user_input[i % len(user_input)]))
-
-        # Write the MIDI data to MusicXML
+        notes = midi_data.recurse().notes
+        for note in notes:
+            if lyrics:
+                random_lyric = random.choice(lyrics)
+                lyric = music21.note.Lyric(random_lyric)
+                note.lyrics.append(lyric)
         midi_data.write('musicxml', self.__xml_file)
 
     def musicxml_to_midi(self, output_file_path: str) -> None:
@@ -68,9 +63,10 @@ def get_range(number: int) -> list:
 
 
 if __name__ == '__main__':
-    midi_file = "../../resources/midi/yonatan.mid"
+    midi_file = "../../resources/midi/rush E.mid"
     streamer = MidiStreamer(midi_file)
-    # streamer.midi_to_musicxml([1])
-    streamer.musicxml_to_midi("output.mid")
-    save_identical_notes("example.xml", "1", "output.mid")
-    # TODO: rewrite midi to xml code
+    streamer.midi_to_musicxml(get_range(1))
+    save_identical_notes(f"{streamer.name}.xml", "1", f"{streamer.name}.mid")
+
+# TODO: the problem with my code is that somewhere between the conversion from musicXML to midi there are new notes
+#  that are added to the midi. without lyrics the program works great (from midi to xml and back)

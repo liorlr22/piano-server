@@ -10,7 +10,8 @@ def change_appearance_mode_event(new_appearance_mode: str):
 
 
 def on_button_click(file_name: str, connected_clients: int = 5):
-    # TODO: instead of 5, parse the number of connected clients and broadcast it to them
+    # TODO: instead of 5, parse the number of connected clients and broadcast it to them, also update the number
+    #  of clients that are connected in the GUI
     print(file_name)
     stream = MidiStreamer(f"resources/midi/{file_name}")
     stream.midi_to_musicxml(get_range(connected_clients))

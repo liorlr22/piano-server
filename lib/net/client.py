@@ -54,7 +54,7 @@ class PianoClient:
                 break
             message = data.decode()
             # Print the received message to the console.
-            # TODO: Play message
+            # TODO: Play message (in idea it should be a midi file with the right notes)
             print(message)
 
     def disconnect(self) -> None:
