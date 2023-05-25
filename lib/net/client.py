@@ -48,14 +48,24 @@ class PianoClient:
         """
         Receives messages from the piano server and prints them to the console.
         """
-        while True:
-            data = self.sock.recv(self.buffer_size)
-            if not data:
-                break
-            message = data.decode()
-            # Print the received message to the console.
-            # TODO: Play message (in idea it should be a midi file with the right notes)
-            print(message)
+        try:
+            filename: str = "to_play.mid"
+            # Receive MIDI data from the server
+            midi_data = b""
+            while True:
+                data = self.sock.recv(1024)
+                if not data:
+                    break
+                midi_data += data
+
+            # Save the received MIDI data to a file
+            with open(f"recv/{filename}", "wb") as file:
+                file.write(midi_data)
+
+            print(f"MIDI file received: {filename}")
+
+        except Exception as e:
+            print(f"Error occurred: {str(e)}")
 
     def disconnect(self) -> None:
         """

@@ -1,7 +1,4 @@
-import threading
 from tkinter import messagebox
-import mido
-from pickle import dumps, loads
 from lib.net import PianoServer
 from lib.visuals import ServerApp
 from lib.visuals.updateGui import UpdateGui
