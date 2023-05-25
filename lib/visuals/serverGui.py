@@ -13,12 +13,11 @@ def change_appearance_mode_event(new_appearance_mode: str):
 def on_button_click(file_name: str, connected_clients: int = 5):
     # TODO: instead of 5, parse the number of connected clients and broadcast it to them, also update the number
     #  of clients that are connected in the GUI
-    print(file_name)
-    stream = MidiStreamer(f"resources/midi/{file_name}")
-    midis = stream.generate_players_midi(connected_clients)
+    streamer = MidiStreamer(f"resources/midi/{file_name}")
+    midis = streamer.generate_players_midi(connected_clients)
     for i, midi in enumerate(midis):
-        midi.save(f"test-{i}.mid")
-        print(f"Saved test-{i}.mid")
+        midi.save(f"{streamer.name}-{i}.mid")
+        print(f"Saved {streamer.name}-{i}.mid")
 
 
 def start_gui_server():
@@ -71,11 +70,11 @@ class ServerApp(ctk.CTk):
                                                     text=f"Clients: 0",
                                                     anchor="center", font=("Ariel", 25))
         self.clients_connected_label.grid(row=3, column=0, padx=20, pady=(10, 10))
+        self.start_sending_button = ctk.CTkButton(self.sidebar_frame, text="send", anchor="center",
+                                                  font=("Ariel", 15))
+        self.start_sending_button.grid(row=5, column=0, padx=20)
 
         # add appearance mode label and option menu to the sidebar frame
-        self.appearance_mode_label = ctk.CTkLabel(self.sidebar_frame, text="Appearance Mode:", anchor="w",
-                                                  font=("Ariel", 15))
-        self.appearance_mode_label.grid(row=5, column=0, padx=20, pady=(10, 0))
         self.appearance_mode_option_menu = ctk.CTkOptionMenu(self.sidebar_frame,
                                                              values=["Light", "Dark", "System"],
                                                              command=change_appearance_mode_event)
