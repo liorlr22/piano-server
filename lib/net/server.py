@@ -71,13 +71,11 @@ class PianoServer:
         # Close the server socket.
         self.sock.close()
 
-    def start_server_thread(self) -> threading.Thread:
+    def create_thread(self) -> threading.Thread:
         """
         Starts the piano server in a new thread and listens for incoming client connections.
         """
-        thread = threading.Thread(target=self.start_server, args=())
-        thread.start()
-        return thread
+        return threading.Thread(target=self.start_server, args=())
 
     @property
     def connected_clients(self) -> int:

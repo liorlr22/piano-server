@@ -2,7 +2,8 @@ import threading
 from tkinter import messagebox
 import customtkinter as ctk
 import os
-from lib.midi import MidiStreamer, get_range
+from lib.midi import MidiStreamer
+from lib.net import PianoServer
 
 
 def change_appearance_mode_event(new_appearance_mode: str):
@@ -14,8 +15,10 @@ def on_button_click(file_name: str, connected_clients: int = 5):
     #  of clients that are connected in the GUI
     print(file_name)
     stream = MidiStreamer(f"resources/midi/{file_name}")
-    stream.midi_to_musicxml(get_range(connected_clients))
-    stream.musicxml_to_midi(f"{file_name}")
+    midis = stream.generate_players_midi(connected_clients)
+    for i, midi in enumerate(midis):
+        midi.save(f"test-{i}.mid")
+        print(f"Saved test-{i}.mid")
 
 
 def start_gui_server():
@@ -26,11 +29,12 @@ def start_gui_server():
 
 
 class ServerApp(ctk.CTk):
-    def __init__(self):
+    def __init__(self, server: PianoServer):
         super().__init__()
 
         self.width = 1100
         self.height = 580
+        self.server = server
 
         # configure window
         self.title("Remote Pianist")
@@ -44,7 +48,6 @@ class ServerApp(ctk.CTk):
         self.grid_columnconfigure((2, 3), weight=0)
         self.grid_rowconfigure((0, 1, 2), weight=1)
 
-        self.clients_connected_count = 0
         # Check if MIDI directory exists and is not empty
         self.midi_dir = "resources/midi/"
         if not os.path.exists(self.midi_dir):
@@ -65,7 +68,7 @@ class ServerApp(ctk.CTk):
                                         font=("Ariel", 32))
         self.title_label.grid(row=2, column=0, padx=20, pady=(10, 10))
         self.clients_connected_label = ctk.CTkLabel(self.sidebar_frame,
-                                                    text=f"Clients: {self.clients_connected_count}",
+                                                    text=f"Clients: 0",
                                                     anchor="center", font=("Ariel", 25))
         self.clients_connected_label.grid(row=3, column=0, padx=20, pady=(10, 10))
 
