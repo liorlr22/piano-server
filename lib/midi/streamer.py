@@ -1,7 +1,10 @@
 import random
+
+import mido
 import music21
-from music21 import converter, stream
 from pathlib import Path
+from pickle import loads as pickle_loads
+from pickle import dumps as pickle_dumps
 
 
 def save_identical_notes(musicxml_path, value: str, output_path):
@@ -14,9 +17,12 @@ def save_identical_notes(musicxml_path, value: str, output_path):
     # Iterate over the notes in the score
     for note in score.flat.getElementsByClass('Note'):
         for lyric in note.lyrics:
-            if lyric.text == value:
+            if lyric.identifier == value:
                 # Add the note to the result stream
                 result_stream.append(note)
+            else:
+                # Add a rest to the result stream
+                result_stream.append(music21.note.Rest(quarterLength=note.quarterLength))
     # Save the resulting stream as a MIDI file
     result_stream.write('midi', fp=output_path)
 
@@ -27,46 +33,52 @@ class MidiStreamer:
         self.name = f"{Path(self.__midi_file).name.rstrip('.mid')}"
         self.__xml_file = f"{self.name}.xml"
 
-    def midi_to_musicxml(self, lyrics) -> None:
-        midi_data = converter.parse(self.__midi_file)
+    def generate_players_midi(self, players_num: int) -> list[mido.MidiFile]:
+        # Read midi notes
+        midi = mido.MidiFile(self.__midi_file)
 
-        notes = midi_data.recurse().notes
-        for note in notes:
-            if lyrics:
-                random_lyric = random.choice(lyrics)
-                lyric = music21.note.Lyric(random_lyric)
-                note.lyrics.append(lyric)
-        midi_data.write('musicxml', self.__xml_file)
+        # Create an empty track for each player
+        players_midi: list[mido.MidiFile] = []
+        for _ in range(players_num):
+            player_midi = mido.MidiFile()
 
-    def musicxml_to_midi(self, output_file_path: str) -> None:
-        musicxml_data = converter.parse(self.__xml_file)
-        musicxml_data.write('midi', output_file_path)
+            for attr in ["charset", "clip", "debug", "filename", "ticks_per_beat", "type"]:
+                setattr(player_midi, attr, getattr(midi, attr))
 
+            players_midi.append(player_midi)
 
-def get_range(number: int) -> list:
-    """
-    This function takes a number as input and returns a list of numbers from 1 to that number.
+        # Iterate over the tracks
+        for track_index in range(len(midi.tracks)):
+            # Create a new track for each player
+            for player in range(len(players_midi)):
+                player_track = mido.MidiTrack()
+                player_track.name = midi.tracks[track_index].name
 
-    Args:
-      number: The number to generate a list of numbers from.
+                players_midi[player].tracks.append(player_track)
 
-    Returns:
-      A list of numbers from 1 to the input number.
-    """
+            # Split Messages to each player
+            for msg in midi.tracks[track_index]:
+                if msg.type == "note_on":
+                    selected_player: int = random.randrange(players_num)
+                    for player in range(len(players_midi)):
+                        if player == selected_player:
+                            # Selected player plays the note (note_on message)
+                            players_midi[player].tracks[track_index].append(msg)
+                        else:
+                            # Other players don't play the note (note_off message)
+                            off_message = msg.copy(velocity=0)
+                            players_midi[player].tracks[track_index].append(off_message)
 
-    assert number >= 0, "number must be higher or equal to 0"
-    list_of_numbers = []
-    for i in range(1, number + 1):
-        list_of_numbers.append(i)
-
-    return list_of_numbers
+                else:
+                    for player_track in players_midi:
+                        player_track.tracks[track_index].append(msg)
+        return players_midi
 
 
 if __name__ == '__main__':
-    midi_file = "../../resources/midi/rush E.mid"
+    midi_file = "../../resources/midi/Gravity Falls.mid"
     streamer = MidiStreamer(midi_file)
-    streamer.midi_to_musicxml(get_range(1))
-    save_identical_notes(f"{streamer.name}.xml", "1", f"{streamer.name}.mid")
-
-# TODO: the problem with my code is that somewhere between the conversion from musicXML to midi there are new notes
-#  that are added to the midi. without lyrics the program works great (from midi to xml and back)
+    midis = streamer.generate_players_midi(1)
+    for i, midi in enumerate(midis):
+        midi.save(f"{streamer.name}-{i}.mid")
+        print(f"Saved {streamer.name}-{i}.mid")
