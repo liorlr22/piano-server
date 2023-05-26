@@ -1,30 +1,6 @@
 import random
-
 import mido
-import music21
 from pathlib import Path
-from pickle import loads as pickle_loads
-from pickle import dumps as pickle_dumps
-
-
-def save_identical_notes(musicxml_path, value: str, output_path):
-    # Load the MusicXML file
-    score = music21.converter.parse(musicxml_path)
-
-    # Create a new stream for the resulting notes
-    result_stream = music21.stream.Stream()
-
-    # Iterate over the notes in the score
-    for note in score.flat.getElementsByClass('Note'):
-        for lyric in note.lyrics:
-            if lyric.identifier == value:
-                # Add the note to the result stream
-                result_stream.append(note)
-            else:
-                # Add a rest to the result stream
-                result_stream.append(music21.note.Rest(quarterLength=note.quarterLength))
-    # Save the resulting stream as a MIDI file
-    result_stream.write('midi', fp=output_path)
 
 
 class MidiStreamer:
@@ -78,7 +54,7 @@ class MidiStreamer:
 if __name__ == '__main__':
     midi_file = "../../resources/midi/Gravity Falls.mid"
     streamer = MidiStreamer(midi_file)
-    midis = streamer.generate_players_midi(1)
+    midis = streamer.generate_players_midi(10)
     for i, midi in enumerate(midis):
         midi.save(f"{streamer.name}-{i}.mid")
         print(f"Saved {streamer.name}-{i}.mid")
