@@ -12,14 +12,6 @@ def start_gui_client() -> None:
     app.run()
 
 
-def start_midi_client() -> None:
-    ctk.set_appearance_mode("System")
-    ctk.set_default_color_theme("blue")
-    midi_app = MidiApp()
-    midi_app.run()
-    # TODO: close the connection if the window is closed
-
-
 class ClientApp(ctk.CTk):
 
     def __init__(self, connect_callback: callable = None) -> None:
@@ -74,8 +66,8 @@ class ClientApp(ctk.CTk):
             self.client.connect()
             self.destroy()
             print("opening midi window")
-            start_midi_client()
-        except ConnectionRefusedError as e:
+            self.start_midi_client()
+        except ConnectionRefusedError:
             msg.showerror("Error", f"Couldn't connect to server\ncheck ip and port again (connection refused)")
 
     def getIP(self) -> str:
@@ -95,6 +87,13 @@ class ClientApp(ctk.CTk):
     def on_closing(self) -> None:
         if msg.askokcancel("Quit", "Are you sure you want to exit?"):
             self.destroy()
+
+    def start_midi_client(self) -> None:
+        ctk.set_appearance_mode("System")
+        ctk.set_default_color_theme("blue")
+        midi_app = MidiApp(self.client)
+        midi_app.run()
+        # TODO: close the connection if the window is closed
 
 
 if __name__ == '__main__':

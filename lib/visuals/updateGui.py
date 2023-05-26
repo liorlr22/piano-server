@@ -1,6 +1,5 @@
 import threading
 import time
-
 from lib.net import PianoServer
 from lib.visuals import ServerApp
 

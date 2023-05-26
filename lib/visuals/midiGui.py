@@ -1,10 +1,10 @@
 import customtkinter as ctk
-import tkinter as tk
+from ..net import PianoClient
 from tkinter import messagebox as msg
 
 
 class MidiApp(ctk.CTk):
-    def __init__(self):
+    def __init__(self, client: PianoClient):
         super().__init__()
 
         self.window_width = 400
@@ -14,6 +14,8 @@ class MidiApp(ctk.CTk):
         self.title("Midi Window")
         self.iconbitmap("resources/pictures/electric.ico")
         self.protocol("WM_DELETE_WINDOW", self.on_closing)
+
+        self.client = client
 
         self.song = "song"
         self.note = "note"
@@ -35,6 +37,7 @@ class MidiApp(ctk.CTk):
     def on_closing(self) -> None:
         if msg.askokcancel("Quit", "Are you sure you want to exit?"):
             self.destroy()
+            self.client.disconnect()
 
 
 if __name__ == '__main__':

@@ -52,7 +52,6 @@ class PianoServer:
         while True:
             # Accept a new client connection.
             client, addr = self.sock.accept()
-            print(f"Received connection from {addr}")
             # Create a new thread to handle communication with the client.
 
             client_thread = threading.Thread(target=self.handle_client, args=(client,))
@@ -93,22 +92,16 @@ class PianoServer:
         print(f"Client connected at {client}")
 
         while True:
-            pass
-            # try:
-            #     # Receive data from the client.
-            #     data: bytes = client.recv(self.buffer_size)
-            #     # if data:
-            #     #     self.broadcast(data, client)
-            #     # else:
-            #     #     # If no data is received, the client has disconnected.
-            #     #     raise Exception("Client disconnected")
-            # except Exception as e:
-            #     # If an exception is raised, the client has disconnected.
-            #     print(f"Client {client.getpeername()} disconnected ({str(e)})")
-            #     self.clients.remove(client)
-            #     client.close()
-            #     # Return from the function to end the client thread.
-            #     return False
+            # pass
+            # Receive data from the client.
+            try:
+                data: bytes = client.recv(self.buffer_size)
+                if data:
+                    pass
+            except Exception as e:
+                # If no data is received, the client has disconnected.
+                self.clients.remove(client)
+                print(self.connected_clients)
 
     def broadcast(self, data: bytes, sender: Optional[socket.socket] = None) -> None:
         """
