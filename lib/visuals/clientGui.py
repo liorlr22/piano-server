@@ -1,6 +1,5 @@
 import customtkinter as ctk
 from ..net import PianoClient
-from ..visuals.midiGui import MidiApp
 from tkinter import messagebox as msg
 import re
 
@@ -87,13 +86,6 @@ class ClientApp(ctk.CTk):
     def on_closing(self) -> None:
         if msg.askokcancel("Quit", "Are you sure you want to exit?"):
             self.destroy()
-
-    def start_midi_client(self) -> None:
-        ctk.set_appearance_mode("System")
-        ctk.set_default_color_theme("blue")
-        midi_app = MidiApp(self.client)
-        midi_app.run()
-        # TODO: close the connection if the window is closed
 
 
 if __name__ == '__main__':

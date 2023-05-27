@@ -1,6 +1,18 @@
+import os
+import shutil
 import socket
+import struct
 import threading
 from typing import Union
+from music21 import converter, midi
+from pickle import loads as pickle_loads
+
+
+def play_midi_file(filename):
+    score = converter.parse(filename)
+    midi_player = midi.realtime.StreamPlayer(score)
+    midi_player.play()
+    score.write('midi', fp=filename)
 
 
 class PianoClient:
@@ -12,7 +24,6 @@ class PianoClient:
             host (str): The host address of the piano server.
             port (int): The port number of the piano server.
             buffer_size (int): The maximum number of bytes to receive at once.
-            id (int): The ID of the piano client.
         """
         self.buffer_size = buffer_size
         self.host: str = host
@@ -49,23 +60,40 @@ class PianoClient:
         Receives messages from the piano server and prints them to the console.
         """
         try:
-            filename: str = "to_play.mid"
-            # Receive MIDI data from the server
-            midi_data = b""
-            while True:
-                data = self.sock.recv(1024)
+            folder_path = "recv/"
+            if os.path.exists(folder_path):
+                shutil.rmtree(folder_path)
+            os.makedirs(folder_path)
+
+            filename: str = self.sock.recv(1024).decode()
+            message_header = self.sock.recv(8)
+            message_length = struct.unpack('>Q', message_header)[0]
+            #
+            serialized = b''
+            while len(serialized) < message_length:
+                remaining = message_length - len(serialized)
+                data = self.sock.recv(min(remaining, 2048))
                 if not data:
                     break
-                midi_data += data
-
+                serialized += data
+            print("stop data")
             # Save the received MIDI data to a file
-            with open(f"recv/{filename}", "wb") as file:
-                file.write(midi_data)
+            with open(f"{folder_path}{filename}.mid", "wb+") as file:
+                file.write(pickle_loads(serialized))
+                file.close()
 
             print(f"MIDI file received: {filename}")
 
         except Exception as e:
             print(f"Error occurred: {str(e)}")
+        finally:
+            mid = f"recv/{filename}.mid"
+            play_midi_file(mid)
+            # midiGUI = threading.Thread(target=self.start_midi_client)
+            # midiGUI.start()
+
+            # midiGUI.join()
+            print("done playing")
 
     def disconnect(self) -> None:
         """
@@ -73,3 +101,10 @@ class PianoClient:
         """
         # Close the socket.
         self.sock.close()
+
+    def start_midi_client(self) -> None:
+        # ctk.set_appearance_mode("System")
+        # ctk.set_default_color_theme("blue")
+        # midi_app = MidiApp()
+        # midi_app.run()
+        pass

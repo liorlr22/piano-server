@@ -1,6 +1,8 @@
 import socket
 import threading
 from typing import List, Optional
+from pickle import dumps as pickle_dumps
+import struct
 
 
 class PianoServer:
@@ -101,7 +103,12 @@ class PianoServer:
             except Exception as e:
                 # If no data is received, the client has disconnected.
                 self.clients.remove(client)
-                print(self.connected_clients)
+
+    def send(self, data: bytes, receiver: socket.socket, filename: str):
+        receiver.send(filename.encode())
+        serialized = pickle_dumps(data)
+        message = struct.pack('>Q', len(serialized)) + serialized
+        receiver.send(message)
 
     def broadcast(self, data: bytes, sender: Optional[socket.socket] = None) -> None:
         """
@@ -114,4 +121,6 @@ class PianoServer:
         for client in self.clients:
             if sender and client == sender:
                 continue
-            client.sendall(data)
+            serialized = pickle_dumps(data)
+            message = struct.pack('>Q', len(serialized)) + serialized
+            client.sendall(message)
