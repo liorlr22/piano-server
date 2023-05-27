@@ -2,3 +2,6 @@
 __pycache__/
 venv/
 files_to_send/
+recv/
+
+*.bat
