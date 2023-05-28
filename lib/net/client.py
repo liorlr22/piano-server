@@ -34,30 +34,18 @@ class PianoClient:
     def connect(self) -> None:
         """
         Connects the piano client to the piano server.
-        Sends the client's username to the server and starts a new thread to receive messages from the server.
+        Starts a new thread to receive messages from the server.
         """
         self.sock.connect((self.host, self.port))
         print(f"Connected to server at {self.host}:{self.port}")
-        # Send the client's username to the server.
-        # self.sock.sendall(self.username.encode())
 
         # Start a new thread to listen for incoming messages from the server.
         receive_thread = threading.Thread(target=self.receive_messages)
         receive_thread.start()
 
-    def send_message(self, message: str) -> None:
-        """
-        Sends a message to the piano server.
-
-        Args:
-            message (str): The message to send.
-        """
-        # Send the message to the server.
-        self.sock.sendall(message.encode())
-
     def receive_messages(self) -> None:
         """
-        Receives messages from the piano server and prints them to the console.
+        Receives messages from the piano server
         """
         try:
             folder_path = "recv/"
@@ -101,10 +89,3 @@ class PianoClient:
         """
         # Close the socket.
         self.sock.close()
-
-    def start_midi_client(self) -> None:
-        # ctk.set_appearance_mode("System")
-        # ctk.set_default_color_theme("blue")
-        # midi_app = MidiApp()
-        # midi_app.run()
-        pass

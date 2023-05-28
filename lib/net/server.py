@@ -85,7 +85,7 @@ class PianoServer:
     def handle_client(self, client: socket.socket) -> None:
         """
         Handles communication with a connected client.
-        Adds the client to the list of connected clients, and broadcasts messages to other clients.
+        Adds the client to the list of connected clients.
 
         Args:
             client (socket): The client socket to handle communication with.
@@ -105,6 +105,18 @@ class PianoServer:
                 self.clients.remove(client)
 
     def send(self, data: bytes, receiver: socket.socket, filename: str):
+        """
+        Sends the provided data to the specified receiver socket along with the filename.
+
+        Args:
+            data (bytes): The data to be sent.
+            receiver (socket.socket): The socket to which the data should be sent.
+            filename (str): The name of the file being sent.
+
+        Returns:
+            None
+        """
+
         receiver.send(filename.encode())
         serialized = pickle_dumps(data)
         message = struct.pack('>Q', len(serialized)) + serialized

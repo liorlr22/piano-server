@@ -7,7 +7,6 @@ class MidiStreamer:
     def __init__(self, midi_file: str) -> None:
         self.__midi_file = midi_file
         self.name = f"{Path(self.__midi_file).name.rstrip('.mid')}"
-        self.__xml_file = f"{self.name}.xml"
 
     def generate_players_midi(self, players_num: int) -> list[mido.MidiFile]:
         # Read midi notes

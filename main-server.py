@@ -4,11 +4,6 @@ from lib.visuals import ServerApp
 from lib.visuals.updateGui import UpdateGui
 
 
-# Select port
-# Select host
-# Add Index splitting logics
-
-
 class Main:
     def __init__(self) -> None:
         self.host = "0.0.0.0"
@@ -36,6 +31,11 @@ class Main:
         self.app.mainloop()
 
     def on_closing(self) -> None:
+        """
+        Prompt user to confirm quitting and closing the server.
+        If the user confirms, the application window is destroyed,
+        and the server is stopped.
+        """
         if messagebox.askokcancel("Quit", "Are you sure you want to exit?\nServer will be closed too"):
             self.app.destroy()
             self.server.stop_server()
