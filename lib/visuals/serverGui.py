@@ -1,7 +1,9 @@
 import shutil
+import time
 from tkinter import messagebox
 import customtkinter as ctk
 import os
+import mido
 from lib.midi import MidiStreamer
 from lib.net.server import PianoServer
 
@@ -10,18 +12,35 @@ def change_appearance_mode_event(new_appearance_mode: str):
     ctk.set_appearance_mode(new_appearance_mode)
 
 
+def get_midi_file_length(file_path):
+    try:
+        mid = mido.MidiFile(file_path)
+        ticks_per_beat = mid.ticks_per_beat
+        total_ticks = 0
+
+        for track in mid.tracks:
+            track_ticks = sum(msg.time for msg in track if isinstance(msg.time, int))
+            total_ticks = max(total_ticks, track_ticks)
+
+        length_in_seconds = mido.tick2second(total_ticks, ticks_per_beat, tempo=500000)  # Adjust tempo as needed
+        return length_in_seconds
+    except OSError as e:
+        print(f"Error: {e}")
+
+
 class ServerApp(ctk.CTk):
     """
     Creates the server GUI window.
     """
+
     def __init__(self, server: PianoServer):
         super().__init__()
 
         # Initialize variables
         self.chosen_song: str = ""
-        self.width = 1100
-        self.height = 580
-        self.server = server
+        self.width: int = 1100
+        self.height: int = 580
+        self.server: PianoServer = server
 
         # Configure window
         self.title("Remote Pianist")
@@ -39,7 +58,7 @@ class ServerApp(ctk.CTk):
         self.midi_dir = "resources/midi/"
         if not os.path.exists(self.midi_dir):
             messagebox.showerror("Error", f"MIDI directory '{self.midi_dir}' not found.")
-            exit()
+            os.makedirs(self.midi_dir)
         self.midi_files = os.listdir(self.midi_dir)
         if not self.midi_files:
             messagebox.showerror("Error", f"No MIDI files found in directory '{self.midi_dir}'.")
@@ -144,13 +163,13 @@ class ButtonFrame(ctk.CTkFrame):
 
     def __init__(self, parent: ServerApp, midi_files: str):
         super().__init__(parent)
-        self.midi_dir = os.listdir(midi_files)
+        self.midi_dir: list = os.listdir(midi_files)
 
-        self.num_files = len(self.midi_dir)
-        self.max_rows = 9
-        self.max_cols = 5
-        self.num_cols = 1
-        self.num_rows = 0
+        self.num_files: int = len(self.midi_dir)
+        self.max_rows: int = 9
+        self.max_cols: int = 5
+        self.num_cols: int = 1
+        self.num_rows: int = 0
 
         # Add MIDI buttons to the frame
         for i in range(self.num_files):
