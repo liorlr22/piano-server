@@ -28,10 +28,10 @@ class PianoServer:
             listen (int): The maximum number of queued connections (listen backlog).
             buffer_size (int): The maximum number of bytes to receive at once.
         """
-        self.host = host
-        self.port = port
-        self.listen = listen
-        self.buffer_size = buffer_size
+        self.host: str = host
+        self.port: int = port
+        self.listen: int = listen
+        self.buffer_size: int = buffer_size
         assert 0 <= self.port < 65535, "Port number must be between 0 and 65535"
         if self.port == 0:
             print("Warning: Port number is 0, a random open port will be chosen")
@@ -104,7 +104,7 @@ class PianoServer:
                 # If no data is received, the client has disconnected.
                 self.clients.remove(client)
 
-    def send(self, data: bytes, receiver: socket.socket, filename: str):
+    def send(self, data: bytes, receiver: socket.socket, filename: str) -> None:
         """
         Sends the provided data to the specified receiver socket along with the filename.
 
