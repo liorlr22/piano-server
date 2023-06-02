@@ -37,10 +37,8 @@ class MidiStreamer:
                     selected_player: int = random.randrange(players_num)
                     for player in range(len(players_midi)):
                         if player == selected_player:
-                            # Selected player plays the note (note_on message)
                             players_midi[player].tracks[track_index].append(msg)
                         else:
-                            # Other players don't play the note (note_off message)
                             off_message = msg.copy(velocity=0)
                             players_midi[player].tracks[track_index].append(off_message)
 
