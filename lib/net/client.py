@@ -6,7 +6,7 @@ import threading
 from typing import Union
 from music21 import converter, midi
 from pickle import loads as pickle_loads
-from ..visuals import midiGui
+from ..visuals.client.midiGui import MidiApp
 
 
 class PianoClient:
@@ -71,7 +71,7 @@ class PianoClient:
                 print(f"Error occurred: {str(e)}")
             finally:
                 mid = f"recv/{filename}.mid"
-                play_midi_file(mid)
+                handle_midi_file(mid)
                 continue
 
     def disconnect(self) -> None:
@@ -82,12 +82,20 @@ class PianoClient:
         self.sock.close()
 
 
-def play_midi_file(filename: str) -> None:
-    app = midiGui.MidiApp()
-    app.label_song.configure(text=filename)
-    app_thread = threading.Thread(target=app.run)
-    app_thread.start()
+def handle_midi_file(filename: str) -> None:
+    def play_midi_file(filename: str) -> None:
+        score = converter.parse(filename)
+        midi_player = midi.realtime.StreamPlayer(score)
+        midi_player.play()
 
-    score = converter.parse(filename)
-    midi_player = midi.realtime.StreamPlayer(score)
-    midi_player.play()
+    music_thread = threading.Thread(target=play_midi_file, args=[filename])
+    music_thread.start()
+
+    app = MidiApp()
+    filename = str(filename).rstrip(".mid")
+    if len(filename) > 20 and ' ' in filename:
+        words = filename.split()
+        filename = '\n'.join(words)
+    filename = filename.split("/")[1].split("--")[0]
+    app.label_song.configure(text=filename)
+    app.run()

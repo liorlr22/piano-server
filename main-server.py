@@ -1,7 +1,7 @@
 from tkinter import messagebox
 from lib.net import PianoServer
 from lib.visuals import ServerApp
-from lib.visuals.updateGui import UpdateGui
+from lib.visuals.server.updateGui import UpdateGui
 
 
 class Main:

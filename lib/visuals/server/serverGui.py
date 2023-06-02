@@ -1,5 +1,5 @@
 import shutil
-import time
+from tkinter import filedialog
 from tkinter import messagebox
 import customtkinter as ctk
 import os
@@ -126,6 +126,14 @@ class ServerApp(ctk.CTk):
 
         self.chosen_song_label.configure(text=label_text)
 
+    def on_extra_button_click(self):
+        self.chosen_song = filedialog.askopenfilename(title="choose midi", filetypes=(("MIDI", "*.mid"),))
+        self.chosen_song = os.path.basename(self.chosen_song).rstrip(".mid")
+        if len(self.chosen_song) > 20 and ' ' in self.chosen_song:
+            words = self.chosen_song.split()
+            self.chosen_song = '\n'.join(words)
+        self.chosen_song_label.configure(text=self.chosen_song)
+
     def on_start_button(self):
         """
         Handles the start button click event.
@@ -171,16 +179,30 @@ class ButtonFrame(ctk.CTkFrame):
         self.num_cols: int = 1
         self.num_rows: int = 0
 
+        # Calculate the number of buttons that can fit in the grid
+        max_buttons = self.max_rows * self.max_cols
+
         # Add MIDI buttons to the frame
         for i in range(self.num_files):
-            # Check if current column is full
+            # Check if the maximum number of buttons is reached
+            if i >= max_buttons:
+                break
+
+            # Check if the current column is full
             if self.num_rows >= self.max_rows:
                 self.num_cols += 1
                 self.num_rows = 0
 
             btn = ctk.CTkButton(self, text=self.midi_dir[i].rstrip(".mid").capitalize(),
                                 command=lambda name=self.midi_dir[i]: parent.on_button_click(name), width=30,
-                                height=50)
-            btn.grid(row=self.num_rows + 1, column=self.num_cols - 1, pady=5, padx=10, sticky="nsew")
+                                height=50, )
+            btn.grid(row=self.num_rows + 1, column=self.num_cols - 1, pady=5, padx=10, sticky="nsew", )
 
             self.num_rows += 1
+
+        # Add an extra button at the end
+        if self.num_files < max_buttons:
+            btn = ctk.CTkButton(self, text="add own".capitalize(), command=lambda: parent.on_extra_button_click(),
+                                width=30,
+                                height=50, )
+            btn.grid(row=self.num_rows + 1, column=self.num_cols - 1, pady=5, padx=10, sticky="nsew", )

@@ -31,9 +31,3 @@ class MidiApp(ctk.CTk):
     def on_closing(self) -> None:
         if msg.askokcancel("Quit", "Are you sure you want to exit?"):
             self.destroy()
-            self.client.disconnect()
-
-
-if __name__ == '__main__':
-    app = App()
-    app.run()

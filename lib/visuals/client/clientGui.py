@@ -1,5 +1,5 @@
 import customtkinter as ctk
-from ..net import PianoClient
+from lib.net import PianoClient
 from tkinter import messagebox as msg
 import re
 

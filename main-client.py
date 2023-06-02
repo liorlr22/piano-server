@@ -1,4 +1,4 @@
-from lib.visuals import ClientApp
+from lib.visuals.client.clientGui import ClientApp
 
 
 class Main:
