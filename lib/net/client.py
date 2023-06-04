@@ -87,6 +87,7 @@ def handle_midi_file(filename: str) -> None:
         score = converter.parse(filename)
         midi_player = midi.realtime.StreamPlayer(score)
         midi_player.play()
+        app.stop()
 
     music_thread = threading.Thread(target=play_midi_file, args=[filename])
     music_thread.start()
