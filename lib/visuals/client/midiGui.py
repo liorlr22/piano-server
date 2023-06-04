@@ -1,3 +1,5 @@
+import socket
+
 import customtkinter as ctk
 from tkinter import messagebox as msg
 
@@ -31,3 +33,6 @@ class MidiApp(ctk.CTk):
     def on_closing(self) -> None:
         if msg.askokcancel("Quit", "Are you sure you want to exit?"):
             self.destroy()
+
+    def stop(self) -> None:
+        self.destroy()
