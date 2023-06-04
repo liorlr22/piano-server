@@ -41,6 +41,7 @@ class ServerApp(ctk.CTk):
         self.width: int = 1100
         self.height: int = 580
         self.server: PianoServer = server
+        self.extra: bool = False
 
         # Configure window
         self.title("Remote Pianist")
@@ -128,32 +129,41 @@ class ServerApp(ctk.CTk):
 
     def on_extra_button_click(self):
         self.chosen_song = filedialog.askopenfilename(title="choose midi", filetypes=(("MIDI", "*.mid"),))
-        self.chosen_song = os.path.basename(self.chosen_song).rstrip(".mid")
-        if len(self.chosen_song) > 20 and ' ' in self.chosen_song:
-            words = self.chosen_song.split()
-            self.chosen_song = '\n'.join(words)
-        self.chosen_song_label.configure(text=self.chosen_song)
+        song = os.path.basename(self.chosen_song).rstrip(".mid")
+        if len(song) > 20 and ' ' in song:
+            words = song.split()
+            song = '\n'.join(words)
+        self.chosen_song_label.configure(text=song)
+        if self.chosen_song:
+            self.extra = True
 
     def on_start_button(self):
         """
         Handles the start button click event.
         """
         connected_clients = int(self.clients_connected_label.cget("text").split(' ')[1])
-        print(f"Connected clients: {connected_clients}")
+
+        """ This code checks if there are connected clients and a song is chosen. If both conditions are met, 
+        it hides a button, generates MIDI files for each connected client, saves them to a folder, and sends each 
+        MIDI file to the respective client. If no clients are connected or no song is chosen, it displays an error 
+        message. """
+
         if connected_clients > 0:
             if self.chosen_song == "":
                 messagebox.showerror("Error", "Please choose a song.")
             else:
-                self.start_sending_button.pack_forget()
                 clients = self.server.clients
                 folder_path = "files_to_send/"
-                streamer = MidiStreamer(f"resources/midi/{self.chosen_song}")
+                if self.extra:
+                    streamer = MidiStreamer(f"{self.chosen_song}")
+                    self.extra = False
+                else:
+                    streamer = MidiStreamer(f"resources/midi/{self.chosen_song}")
+                    if os.path.exists(folder_path):
+                        shutil.rmtree(folder_path)
+                    os.makedirs(folder_path)
+
                 midis = streamer.generate_players_midi(connected_clients)
-
-                if os.path.exists(folder_path):
-                    shutil.rmtree(folder_path)
-                os.makedirs(folder_path)
-
                 for i, midi in enumerate(midis):
                     midi.save(f"{folder_path}{streamer.name}-{i}.mid")
                     print(f"Saved {streamer.name}-{i}.mid")
