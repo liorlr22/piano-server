@@ -61,7 +61,7 @@ class PianoClient:
                 filename: str = self.sock.recv(1024).decode()
                 message_header = self.sock.recv(8)
                 message_length = struct.unpack('>Q', message_header)[0]
-                #
+
                 serialized = b''
                 while len(serialized) < message_length:
                     remaining = message_length - len(serialized)
@@ -70,6 +70,7 @@ class PianoClient:
                         break
                     serialized += data
                 print("stop data")
+
                 # Save the received MIDI data to a file
                 with open(f"{folder_path}{filename}.mid", "wb+") as file:
                     file.write(pickle_loads(serialized))
@@ -83,6 +84,7 @@ class PianoClient:
                 if not self.run:
                     mid = f"recv/{filename}.mid"
                     handle_midi_file(mid)
+                    self.run = True
                 continue
 
     def disconnect(self) -> None:
