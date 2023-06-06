@@ -38,6 +38,7 @@ class PianoServer:
 
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.clients: List[socket.socket] = []
+        self.lock = threading.Lock()
 
     def start_server(self) -> None:
         """
@@ -116,11 +117,11 @@ class PianoServer:
         Returns:
             None
         """
-
-        receiver.send(filename.encode())
-        serialized = pickle_dumps(data)
-        message = struct.pack('>Q', len(serialized)) + serialized
-        receiver.send(message)
+        with self.lock:
+            receiver.send(filename.encode())
+            serialized = pickle_dumps(data)
+            message = struct.pack('>Q', len(serialized)) + serialized
+            receiver.send(message)
 
     def broadcast(self, data: bytes, sender: Optional[socket.socket] = None) -> None:
         """

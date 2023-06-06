@@ -5,6 +5,7 @@ import struct
 import threading
 from typing import Union
 from music21 import converter, midi
+import pygame
 from pickle import loads as pickle_loads
 from ..visuals.client.midiGui import MidiApp
 
@@ -24,6 +25,13 @@ class PianoClient:
         self.port: int = port
         self.id: Union[int, None] = None
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.run: bool = False
+
+        pygame.init()
+        pygame.mixer.pre_init(44100, -16, 2)
+        pygame.mixer.init()
+
+        # TODO: check for running again without delay
 
     def connect(self) -> None:
         """
@@ -43,6 +51,8 @@ class PianoClient:
         """
         while True:
             try:
+                self.run = False
+
                 folder_path = "recv/"
                 if os.path.exists(folder_path):
                     shutil.rmtree(folder_path)
@@ -70,8 +80,9 @@ class PianoClient:
             except Exception as e:
                 print(f"Error occurred: {str(e)}")
             finally:
-                mid = f"recv/{filename}.mid"
-                handle_midi_file(mid)
+                if not self.run:
+                    mid = f"recv/{filename}.mid"
+                    handle_midi_file(mid)
                 continue
 
     def disconnect(self) -> None:
