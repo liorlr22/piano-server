@@ -21,11 +21,11 @@ class MidiApp(ctk.CTk):
         frame = ctk.CTkFrame(master=self)
         frame.pack(pady=20, padx=40, fill='both', expand=True)
 
-        self.label_connect = ctk.CTkLabel(master=frame, text='Now Playing:', font=('Ariel', 32))
+        self.label_play = ctk.CTkLabel(master=frame, text='Now Playing:', font=('Ariel', 32))
         self.label_song = ctk.CTkLabel(master=frame, text=f"{self.song.capitalize()}", font=('Ariel', 25))
 
-        self.label_connect.pack(pady=24, padx=10)
-        self.label_song.pack(pady=10, padx=10)
+        self.label_play.pack(pady=24, padx=10)
+        self.label_song.pack(pady=15, padx=10)
 
     def run(self) -> None:
         self.mainloop()
