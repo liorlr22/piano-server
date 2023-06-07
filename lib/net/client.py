@@ -101,6 +101,7 @@ def handle_midi_file(filename: str) -> None:
         midi_player = midi.realtime.StreamPlayer(score)
         midi_player.play()
         app.stop()
+        print("stopped gui")
 
     music_thread = threading.Thread(target=play_midi_file, args=[filename])
     music_thread.start()
