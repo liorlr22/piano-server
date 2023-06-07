@@ -14,22 +14,6 @@ def change_appearance_mode_event(new_appearance_mode: str):
     ctk.set_appearance_mode(new_appearance_mode)
 
 
-def get_midi_file_length(file_path: str) -> int:
-    try:
-        mid = mido.MidiFile(file_path)
-        ticks_per_beat = mid.ticks_per_beat
-        total_ticks = 0
-
-        for track in mid.tracks:
-            track_ticks = sum(msg.time for msg in track if isinstance(msg.time, int))
-            total_ticks = max(total_ticks, track_ticks)
-
-        length_in_seconds = mido.tick2second(total_ticks, ticks_per_beat, tempo=500000)
-        return length_in_seconds
-    except OSError as e:
-        print(f"Error: {e}")
-
-
 class ServerApp(ctk.CTk):
     """
     Creates the server GUI window.
@@ -45,8 +29,6 @@ class ServerApp(ctk.CTk):
         self.server: PianoServer = server
 
         self.extra: bool = False
-        self.running: bool = False
-        self.time_playing: int = 0
 
         # Configure window
         self.title("Remote Pianist")
@@ -125,7 +107,7 @@ class ServerApp(ctk.CTk):
         self.chosen_song = file_name
         print(f"Chosen song: {self.chosen_song}")
 
-        label_text = str(self.chosen_song).rstrip(".mid")
+        label_text = str(self.chosen_song).rstrip(".mid").capitalize()
         if len(label_text) > 20 and ' ' in label_text:
             words = label_text.split()
             label_text = '\n'.join(words)
@@ -134,7 +116,8 @@ class ServerApp(ctk.CTk):
 
     def on_extra_button_click(self):
         self.chosen_song = filedialog.askopenfilename(title="choose midi", filetypes=(("MIDI", "*.mid"),))
-        song = os.path.basename(self.chosen_song).rstrip(".mid")
+        song = os.path.basename(self.chosen_song).rstrip(".mid").capitalize()
+        print(f"Chosen song: {song}")
         if len(song) > 20 and ' ' in song:
             words = song.split()
             song = '\n'.join(words)
@@ -151,45 +134,33 @@ class ServerApp(ctk.CTk):
 
         connected_clients = int(self.clients_connected_label.cget("text").split(' ')[1])
 
-        if not self.running:
-            if connected_clients > 0:
-                if self.chosen_song == "":
-                    messagebox.showerror("Error", "Please choose a song.")
-                else:
-                    def turn_button():
-                        self.start_sending_button.grid_remove()
-                        time.sleep(int(self.time_playing))
-                        self.running = False
-                        self.start_sending_button.grid(row=5, column=0, padx=20)
-
-                    clients = self.server.clients
-                    folder_path = "files_to_send/"
-                    self.running = True
-                    if self.extra:
-                        streamer = MidiStreamer(f"{self.chosen_song}")
-                        self.time_playing = get_midi_file_length(self.chosen_song)
-                        self.extra = False
-                    else:
-                        streamer = MidiStreamer(f"resources/midi/{self.chosen_song}")
-                        self.time_playing = get_midi_file_length(f"resources/midi/{self.chosen_song}")
-                        if os.path.exists(folder_path):
-                            shutil.rmtree(folder_path)
-                        os.makedirs(folder_path)
-
-                    midis = streamer.generate_players_midi(connected_clients)
-                    for i, midi in enumerate(midis):
-                        midi.save(f"{folder_path}{streamer.name}-{i}.mid")
-                        print(f"Saved {streamer.name}-{i}.mid")
-                    for i, client in enumerate(clients):
-                        with open(f"{folder_path}{streamer.name}-{i}.mid", "rb") as f:
-                            self.server.send(f.read(), client, f"{streamer.name}--{i}")
-
-                    threading.Thread(target=turn_button).start()
-
+        if connected_clients > 0:
+            if self.chosen_song == "":
+                messagebox.showerror("Error", "Please choose a song.")
             else:
-                messagebox.showerror("Error", "Cannot be done without clients connected.")
+                clients = self.server.clients
+                folder_path = "files_to_send/"
+                self.running = True
+                if self.extra:
+                    streamer = MidiStreamer(f"{self.chosen_song}")
+                    self.extra = False
+                else:
+                    streamer = MidiStreamer(f"resources/midi/{self.chosen_song}")
+
+                if os.path.exists(folder_path):
+                    shutil.rmtree(folder_path)
+                os.makedirs(folder_path)
+
+                midis = streamer.generate_players_midi(connected_clients)
+                for i, midi in enumerate(midis):
+                    midi.save(f"{folder_path}{streamer.name}-{i}.mid")
+                    print(f"Saved {streamer.name}-{i}.mid")
+                for i, client in enumerate(clients):
+                    with open(f"{folder_path}{streamer.name}-{i}.mid", "rb") as f:
+                        self.server.send(f.read(), client, f"{streamer.name}--{i}")
+
         else:
-            messagebox.showerror("Error", "program is already running")
+            messagebox.showerror("Error", "Cannot be done without clients connected.")
 
 
 class ButtonFrame(ctk.CTkFrame):
