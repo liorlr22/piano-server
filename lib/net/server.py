@@ -105,7 +105,7 @@ class PianoServer:
                 # If no data is received, the client has disconnected.
                 self.clients.remove(client)
 
-    def send(self, data: bytes, receiver: socket.socket, filename: str) -> None:
+    def send(self, data: bytes, receiver: socket.socket, filename: Optional[str] = None) -> None:
         """
         Sends the provided data to the specified receiver socket along with the filename.
 
@@ -118,7 +118,9 @@ class PianoServer:
             None
         """
         with self.lock:
-            receiver.send(filename.encode())
+            if filename:
+                receiver.send(filename.encode())
+                print("sent filename")
             serialized = pickle_dumps(data)
             message = struct.pack('>Q', len(serialized)) + serialized
             receiver.send(message)
@@ -134,6 +136,4 @@ class PianoServer:
         for client in self.clients:
             if sender and client == sender:
                 continue
-            serialized = pickle_dumps(data)
-            message = struct.pack('>Q', len(serialized)) + serialized
-            client.sendall(message)
+            client.sendall(data)
