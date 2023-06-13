@@ -33,8 +33,6 @@ class PianoClient:
         pygame.mixer.pre_init(44100, -16, 2)
         pygame.mixer.init()
 
-        # TODO: check for running again without delay
-
     def connect(self) -> None:
         """
         Connects the piano client to the piano server.
@@ -53,43 +51,16 @@ class PianoClient:
         """
         while True:
             try:
-                self.run = False
-
-                folder_path = "recv/"
-                if os.path.exists(folder_path):
-                    shutil.rmtree(folder_path)
-                os.makedirs(folder_path)
-
-                filename: str = self.sock.recv(1024).decode()
-                message_header = self.sock.recv(8)
-                message_length = struct.unpack('>Q', message_header)[0]
-
-                serialized = b''
-                while len(serialized) < message_length:
-                    remaining = message_length - len(serialized)
-                    data = self.sock.recv(min(remaining, 2048))
-                    if not data:
-                        break
-                    serialized += data
-                print("stop data")
-
-                # Save the received MIDI data to a file
-                with open(f"{folder_path}{filename}.mid", "wb+") as file:
-                    file.write(pickle_loads(serialized))
-                    file.close()
-
-                print(f"MIDI file received: {filename}")
+                data = self.sock.recv(1024)
+                if data == "midi":
+                    print("playing file")
+                    self.handle_midi_file()
+                elif data == "stop":
+                    print("stop")
+                    self.handle_stop_music()
 
             except Exception as e:
                 print(f"Error occurred: {str(e)}")
-            finally:
-                if not self.run:
-                    mid = f"recv/{filename}.mid"
-                    # threading.Thread(target=self.handle_stop_music).start()
-                    self.handle_midi_file(mid)
-                    print("out")
-                    self.run = True
-                continue
 
     def disconnect(self) -> None:
         """
@@ -98,7 +69,7 @@ class PianoClient:
         # Close the socket.
         self.sock.close()
 
-    def handle_midi_file(self, filename: str) -> None:
+    def handle_midi_file(self) -> None:
         def play_midi_file(filename: str) -> None:
             print("playing file")
             score = converter.parse(filename)
@@ -106,6 +77,38 @@ class PianoClient:
             self.midi_player.play()
             print("stopped playing file")
             self.app.stop()
+
+        self.run = False
+
+        folder_path = "recv/"
+        if os.path.exists(folder_path):
+            shutil.rmtree(folder_path)
+        os.makedirs(folder_path)
+
+        filename: str = self.sock.recv(1024).decode()
+        message_header = self.sock.recv(8)
+        message_length = struct.unpack('>Q', message_header)[0]
+
+        serialized = b''
+        while len(serialized) < message_length:
+            remaining = message_length - len(serialized)
+            data = self.sock.recv(min(remaining, 2048))
+            if not data:
+                break
+            serialized += data
+        print("stop data")
+
+        # Save the received MIDI data to a file
+        with open(f"{folder_path}{filename}.mid", "wb+") as file:
+            file.write(pickle_loads(serialized))
+            file.close()
+
+        print(f"MIDI file received: {filename}")
+        if not self.run:
+            mid = f"recv/{filename}.mid"
+            # threading.Thread(target=self.handle_stop_music).start()
+            print("out")
+            self.run = True
 
         music_thread = threading.Thread(target=play_midi_file, args=[filename])
         music_thread.start()
@@ -124,4 +127,3 @@ class PianoClient:
         print("in")
         self.app.stop()
         self.midi_player.stop()
-
