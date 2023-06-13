@@ -1,11 +1,9 @@
 import shutil
 import threading
-import time
 from tkinter import filedialog
 from tkinter import messagebox
 import customtkinter as ctk
 import os
-import mido
 from lib.midi import MidiStreamer
 from lib.net.server import PianoServer
 
@@ -73,6 +71,8 @@ class ServerApp(ctk.CTk):
         self.start_sending_button = ctk.CTkButton(self.sidebar_frame, text="send", anchor="center",
                                                   font=("Ariel", 15), command=lambda: self.on_start_button())
         self.start_sending_button.grid(row=5, column=0, padx=20)
+        self.stop_music_button = ctk.CTkButton(self.sidebar_frame, text="stop", anchor="center",
+                                               font=("Ariel", 15), command=lambda: self.on_stop_button())
 
         # Add appearance mode label and option menu to the sidebar frame
         self.appearance_mode_option_menu = ctk.CTkOptionMenu(self.sidebar_frame,
@@ -132,6 +132,8 @@ class ServerApp(ctk.CTk):
         MIDI file to the respective client. If no clients are connected or no song is chosen, it displays an error
         message. """
 
+        self.start_sending_button.grid_remove()
+        self.stop_music_button.grid(row=5, column=0, padx=20)
         connected_clients = int(self.clients_connected_label.cget("text").split(' ')[1])
 
         if connected_clients > 0:
@@ -140,7 +142,6 @@ class ServerApp(ctk.CTk):
             else:
                 clients = self.server.clients
                 folder_path = "files_to_send/"
-                self.running = True
                 if self.extra:
                     streamer = MidiStreamer(f"{self.chosen_song}")
                     self.extra = False
@@ -161,6 +162,12 @@ class ServerApp(ctk.CTk):
 
         else:
             messagebox.showerror("Error", "Cannot be done without clients connected.")
+
+    def on_stop_button(self):
+        self.stop_music_button.grid_remove()
+        self.start_sending_button.grid(row=5, column=0, padx=20)
+
+        self.server.broadcast("stop".encode())
 
 
 class ButtonFrame(ctk.CTkFrame):
