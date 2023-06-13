@@ -158,6 +158,7 @@ class ServerApp(ctk.CTk):
                     print(f"Saved {streamer.name}-{i}.mid")
                 for i, client in enumerate(clients):
                     with open(f"{folder_path}{streamer.name}-{i}.mid", "rb") as f:
+                        self.server.broadcast("midi".encode())
                         self.server.send(f.read(), client, f"{streamer.name}--{i}")
 
         else:
