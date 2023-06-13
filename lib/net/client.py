@@ -20,6 +20,8 @@ class PianoClient:
             port (int): The port number of the piano server.
             buffer_size (int): The maximum number of bytes to receive at once.
         """
+        self.midi_player = None
+        self.app = None
         self.buffer_size = buffer_size
         self.host: str = host
         self.port: int = port
@@ -83,7 +85,9 @@ class PianoClient:
             finally:
                 if not self.run:
                     mid = f"recv/{filename}.mid"
-                    handle_midi_file(mid)
+                    # threading.Thread(target=self.handle_stop_music).start()
+                    self.handle_midi_file(mid)
+                    print("out")
                     self.run = True
                 continue
 
@@ -94,23 +98,30 @@ class PianoClient:
         # Close the socket.
         self.sock.close()
 
+    def handle_midi_file(self, filename: str) -> None:
+        def play_midi_file(filename: str) -> None:
+            print("playing file")
+            score = converter.parse(filename)
+            self.midi_player = midi.realtime.StreamPlayer(score)
+            self.midi_player.play()
+            print("stopped playing file")
+            self.app.stop()
 
-def handle_midi_file(filename: str) -> None:
-    def play_midi_file(filename: str) -> None:
-        score = converter.parse(filename)
-        midi_player = midi.realtime.StreamPlayer(score)
-        midi_player.play()
-        app.stop()
-        print("stopped gui")
+        music_thread = threading.Thread(target=play_midi_file, args=[filename])
+        music_thread.start()
 
-    music_thread = threading.Thread(target=play_midi_file, args=[filename])
-    music_thread.start()
+        print("running midi")
+        self.app = MidiApp()
+        filename = str(filename).rstrip(".mid")
+        if len(filename) > 20 and ' ' in filename:
+            words = filename.split()
+            filename = '\n'.join(words)
+        filename = filename.split("/")[1].split("--")[0]
+        self.app.label_song.configure(text=filename)
+        self.app.run()
 
-    app = MidiApp()
-    filename = str(filename).rstrip(".mid")
-    if len(filename) > 20 and ' ' in filename:
-        words = filename.split()
-        filename = '\n'.join(words)
-    filename = filename.split("/")[1].split("--")[0]
-    app.label_song.configure(text=filename)
-    app.run()
+    def handle_stop_music(self) -> None:
+        print("in")
+        self.app.stop()
+        self.midi_player.stop()
+
