@@ -46,12 +46,3 @@ class MidiStreamer:
                     for player_track in players_midi:
                         player_track.tracks[track_index].append(msg)
         return players_midi
-
-
-if __name__ == '__main__':
-    midi_file = "../../resources/midi/Gravity Falls.mid"
-    streamer = MidiStreamer(midi_file)
-    midis = streamer.generate_players_midi(10)
-    for i, midi in enumerate(midis):
-        midi.save(f"{streamer.name}-{i}.mid")
-        print(f"Saved {streamer.name}-{i}.mid")

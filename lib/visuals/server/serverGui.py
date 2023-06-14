@@ -1,11 +1,8 @@
 import shutil
-import threading
-import time
 from tkinter import filedialog
 from tkinter import messagebox
 import customtkinter as ctk
 import os
-import mido
 from lib.midi import MidiStreamer
 from lib.net.server import PianoServer
 
@@ -112,7 +109,7 @@ class ServerApp(ctk.CTk):
             words = label_text.split()
             label_text = '\n'.join(words)
 
-        self.chosen_song_label.configure(text=label_text)
+        self.chosen_song_label.configure(text=label_text.capitalize())
 
     def on_extra_button_click(self):
         self.chosen_song = filedialog.askopenfilename(title="choose midi", filetypes=(("MIDI", "*.mid"),))
@@ -121,7 +118,7 @@ class ServerApp(ctk.CTk):
         if len(song) > 20 and ' ' in song:
             words = song.split()
             song = '\n'.join(words)
-        self.chosen_song_label.configure(text=song)
+        self.chosen_song_label.configure(text=song.capitalize())
         if self.chosen_song:
             self.extra = True
 

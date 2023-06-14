@@ -28,10 +28,8 @@ class PianoClient:
         self.run: bool = False
 
         pygame.init()
-        pygame.mixer.pre_init(44100, -16, 2)
+        pygame.mixer.pre_init(44100, -16, 1)
         pygame.mixer.init()
-
-        # TODO: check for running again without delay
 
     def connect(self) -> None:
         """
@@ -69,7 +67,6 @@ class PianoClient:
                     if not data:
                         break
                     serialized += data
-                print("stop data")
 
                 # Save the received MIDI data to a file
                 with open(f"{folder_path}{filename}.mid", "wb+") as file:
@@ -101,7 +98,6 @@ def handle_midi_file(filename: str) -> None:
         midi_player = midi.realtime.StreamPlayer(score)
         midi_player.play()
         app.stop()
-        print("stopped gui")
 
     music_thread = threading.Thread(target=play_midi_file, args=[filename])
     music_thread.start()
@@ -111,6 +107,6 @@ def handle_midi_file(filename: str) -> None:
     if len(filename) > 20 and ' ' in filename:
         words = filename.split()
         filename = '\n'.join(words)
-    filename = filename.split("/")[1].split("--")[0]
+    filename = filename.split("/")[1].split("--")[0].capitalize()
     app.label_song.configure(text=filename)
     app.run()
